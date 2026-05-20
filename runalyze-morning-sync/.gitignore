@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+.env.*
+.coros-token/
+output/*
+!output/.gitkeep
+input/*.har
+input/*.mitm
+.DS_Store

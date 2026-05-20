@@ -1,0 +1,70 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Node / TypeScript
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+coverage/
+**/coverage/
+
+# OS and editor noise
+.DS_Store
+.idea/
+.vscode/
+
+# Secrets and local account state.
+.env
+.env.*
+**/.env
+**/.env.*
+*.pem
+*.key
+*.p12
+*.crt
+*.sqlite
+*.sqlite3
+**/.coros-token/
+**/tokens/
+**/cookies/
+**/sessions/
+
+# Raw exports, private health/training data, and generated personal reports.
+training/
+data/raw/
+data/processed/
+reports/
+**/input/
+**/output/
+*.zip
+*.fit
+*.tcx
+*.har
+*.mitm
+
+# Private manifests and IDs from local Notion/account runs.
+**/*manifest*.json
+**/*notion*ids*.json
+**/*database*ids*.json
+
+# Public repository intentionally excludes undocumented COROS web adapters.
+# The public code keeps recommendation and condition logic, but not private
+# endpoint discovery, captured payloads, or account automation modules.
+runalyze-morning-sync/src/config.ts
+runalyze-morning-sync/src/index.ts
+runalyze-morning-sync/src/runalyzeClient.ts
+runalyze-morning-sync/src/coros*.ts
+runalyze-morning-sync/src/notionDailySync.ts
+runalyze-morning-sync/tests/coros*.test.ts
+runalyze-morning-sync/tests/notionDailySync.test.ts
+
+# Local plotting/cache artifacts.
+.matplotlib/

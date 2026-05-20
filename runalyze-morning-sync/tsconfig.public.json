@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/types.ts",
+    "src/recommendation.ts",
+    "src/conditionAnalysis.ts",
+    "src/planCsv.ts",
+    "src/dates.ts",
+    "src/retry.ts"
+  ]
+}

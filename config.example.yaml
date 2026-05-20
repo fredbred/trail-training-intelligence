@@ -1,0 +1,20 @@
+# Optional heart-rate zones.
+# If omitted, the pipeline only reports descriptive heart-rate metrics.
+heart_rate_zones:
+  z1: [0, 135]
+  z2: [136, 150]
+  z3: [151, 165]
+  z4: [166, 178]
+  z5: [179, 210]
+
+# Trail analysis thresholds. Adjust these to your level and goal race.
+long_run_min_minutes: 90
+medium_run_min_minutes: 60
+significant_ascent_m: 500
+
+# Alert thresholds.
+rapid_volume_increase_pct: 0.35
+rapid_ascent_increase_pct: 0.50
+weekend_imbalance_share: 0.70
+high_intensity_share_alert: 0.20
+monotony_alert: 2.0

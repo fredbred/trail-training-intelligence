@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trail-data-pipeline"
+version = "0.1.0"
+description = "Local COROS trail training data pipeline."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+  "fitdecode>=0.11.0",
+  "fitparse>=1.2.0",
+  "matplotlib>=3.6",
+  "pandas>=1.5",
+  "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.0",
+]
+
+[project.scripts]
+trail-data-pipeline = "trail_data_pipeline.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
