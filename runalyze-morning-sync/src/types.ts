@@ -73,16 +73,16 @@ export type CorosDirectPull = {
 };
 
 export type PlannedSession = {
-  "Séance": string;
+  "Session": string;
   "Date": string;
-  "Semaine": string;
+  "Week": string;
   "Type": string;
-  "Durée prévue min": number;
-  "D+ prévu m": number;
-  "Intensité cible": string;
-  "FC cap bpm"?: number;
-  "RPE cible": number;
-  "Priorité": string;
+  "Planned duration min": number;
+  "Planned ascent m": number;
+  "Target intensity": string;
+  "HR cap bpm"?: number;
+  "Target RPE": number;
+  "Priority": string;
   "Notes": string;
 };
 

@@ -15,16 +15,16 @@ export function parsePlanCsv(csv: string): PlannedSession[] {
   return lines.filter((values) => values.some(Boolean)).map((values) => {
     const row = Object.fromEntries(headers.map((header, index) => [header, values[index] ?? ""]));
     return {
-      "Séance": row["Séance"],
+      "Session": row["Session"],
       "Date": row["Date"],
-      "Semaine": row["Semaine"],
+      "Week": row["Week"],
       "Type": row["Type"],
-      "Durée prévue min": Number(row["Durée prévue min"] || 0),
-      "D+ prévu m": Number(row["D+ prévu m"] || 0),
-      "Intensité cible": row["Intensité cible"],
-      "FC cap bpm": row["FC cap bpm"] ? Number(row["FC cap bpm"]) : undefined,
-      "RPE cible": Number(row["RPE cible"] || 0),
-      "Priorité": row["Priorité"],
+      "Planned duration min": Number(row["Planned duration min"] || 0),
+      "Planned ascent m": Number(row["Planned ascent m"] || 0),
+      "Target intensity": row["Target intensity"],
+      "HR cap bpm": row["HR cap bpm"] ? Number(row["HR cap bpm"]) : undefined,
+      "Target RPE": Number(row["Target RPE"] || 0),
+      "Priority": row["Priority"],
       "Notes": row["Notes"] ?? ""
     };
   });
@@ -34,7 +34,7 @@ export function findPlannedSession(plan: PlannedSession[], date: string, nameCon
   const daySessions = plan.filter((session) => session.Date === date);
   if (!nameContains) return daySessions[0];
   const needle = nameContains.trim().toLowerCase();
-  return daySessions.find((session) => session.Séance.toLowerCase().includes(needle));
+  return daySessions.find((session) => session.Session.toLowerCase().includes(needle));
 }
 
 function parseCsvRecords(csv: string): string[][] {

@@ -34,78 +34,78 @@ export type DatabaseKey =
   | "rules";
 
 export type PlanRow = {
-  "Séance": string;
+  "Session": string;
   "Date": string;
-  "Semaine": string;
+  "Week": string;
   "Phase": string;
   "Type": string;
   "Description": string;
-  "Durée prévue min": number;
-  "D+ prévu m": number;
-  "Intensité cible": string;
-  "FC cap bpm"?: number;
-  "RPE cible": number;
-  "Priorité": string;
-  "Statut": string;
-  "Durée réalisée min"?: number;
-  "D+ réalisé m"?: number;
-  "RPE réalisé"?: number;
-  "FC moyenne"?: number;
+  "Planned duration min": number;
+  "Planned ascent m": number;
+  "Target intensity": string;
+  "HR cap bpm"?: number;
+  "Target RPE": number;
+  "Priority": string;
+  "Status": string;
+  "Completed duration min"?: number;
+  "Completed ascent m"?: number;
+  "Completed RPE"?: number;
+  "Avg HR"?: number;
   "Notes": string;
   "Adaptation"?: string;
 };
 
 export type WeeklyReviewRow = {
-  "Semaine": string;
-  "Semaine du": string;
+  "Week": string;
+  "Week of": string;
   "Phase": string;
-  "Objectif semaine": string;
-  "Heures prévues": number;
-  "Heures réalisées"?: number;
-  "D+ prévu m": number;
-  "D+ réalisé m"?: number;
-  "Séances prévues": number;
-  "Séances réalisées"?: number;
-  "Renfo réalisé": boolean;
-  "Sortie longue": boolean;
-  "Sommeil moyen h"?: number;
-  "VFC moyenne ms"?: number;
-  "FC repos moyenne"?: number;
-  "Récupération COROS moyenne %": number | undefined;
-  "Fatigue générale /10"?: number;
-  "Jambes /10"?: number;
-  "Douleurs / alertes"?: string;
-  "Décision semaine suivante": string;
+  "Week goal": string;
+  "Planned hours": number;
+  "Completed hours"?: number;
+  "Planned ascent m": number;
+  "Completed ascent m"?: number;
+  "Planned sessions": number;
+  "Completed sessions"?: number;
+  "Strength completed": boolean;
+  "Long run completed": boolean;
+  "Avg sleep h"?: number;
+  "Avg HRV ms"?: number;
+  "Avg resting HR"?: number;
+  "Avg recovery %": number | undefined;
+  "General fatigue /10"?: number;
+  "Legs /10"?: number;
+  "Pain / alerts"?: string;
+  "Next week decision": string;
 };
 
 export type PhaseRow = {
   "Phase": string;
   "Dates": string;
-  "Objectif": string;
-  "Volume cible": string;
-  "D+ cible": string;
-  "Renfo": string;
-  "Intensité"?: string;
-  "Sorties longues": string;
-  "Commentaires"?: string;
+  "Goal": string;
+  "Target volume": string;
+  "Target ascent": string;
+  "Strength": string;
+  "Intensity"?: string;
+  "Long runs": string;
+  "Comments"?: string;
 };
 
 export type SessionLibraryRow = {
-  "Séance": string;
+  "Session": string;
   "Type": string;
-  "Objectif": string;
+  "Goal": string;
   "Description": string;
-  "Durée min": number | string;
-  "Priorité": string;
-  "Quand l’utiliser": string;
-  "Adaptation orange/rouge": string;
+  "Duration min": number | string;
+  "Priority": string;
+  "When to use": string;
+  "Orange/red adaptation": string;
 };
 
 export type RuleRow = {
-  "Règle": string;
-  "Catégorie": string;
+  "Rule": string;
+  "Category": string;
   "Description": string;
-  "Action si déclenchée": string;
+  "Triggered action": string;
 };
 
 export type SeedRowsByDatabase = {

@@ -4,30 +4,30 @@ import { recommendToday } from "../src/recommendation.js";
 import type { ConditionAnalysis, MorningPull, PlannedSession } from "../src/types.js";
 
 const hardSession: PlannedSession = {
-  "Séance": "Côte contrôlée",
+  "Session": "Controlled hill",
   "Date": "2026-05-07",
-  "Semaine": "2026-W19",
-  "Type": "Côte",
-  "Durée prévue min": 75,
-  "D+ prévu m": 600,
-  "Intensité cible": "Tempo côte",
-  "FC cap bpm": 162,
-  "RPE cible": 6,
-  "Priorité": "A",
+  "Week": "2026-W19",
+  "Type": "Hill session",
+  "Planned duration min": 75,
+  "Planned ascent m": 600,
+  "Target intensity": "Hill tempo",
+  "HR cap bpm": 162,
+  "Target RPE": 6,
+  "Priority": "A",
   "Notes": ""
 };
 
 const easySession: PlannedSession = {
-  "Séance": "Footing facile",
+  "Session": "Easy run",
   "Date": "2026-05-08",
-  "Semaine": "2026-W19",
-  "Type": "Course facile",
-  "Durée prévue min": 45,
-  "D+ prévu m": 100,
-  "Intensité cible": "Très facile",
-  "FC cap bpm": 140,
-  "RPE cible": 2,
-  "Priorité": "C",
+  "Week": "2026-W19",
+  "Type": "Easy run",
+  "Planned duration min": 45,
+  "Planned ascent m": 100,
+  "Target intensity": "Very easy",
+  "HR cap bpm": 140,
+  "Target RPE": 2,
+  "Priority": "C",
   "Notes": ""
 };
 
@@ -58,15 +58,15 @@ function condition(partial: Partial<ConditionAnalysis>): ConditionAnalysis {
       reasons: []
     },
     data_quality: { level: "good", available: ["sleep", "hrv", "resting_hr", "activities", "coros_evolab"], missing: [], notes: [] },
-    flags: [{ level: "green", code: "no_alert", message: "Aucun signal d’alerte détecté dans les données locales." }],
+    flags: [{ level: "green", code: "no_alert", message: "No warning signal detected in local data." }],
     trends: {
       status: "available",
-      note: "Historique local suffisant.",
+      note: "Enough local history is available.",
       seven_days: { minutes: 210, ascent_m: 700, activity_count: 5, source: "coros_direct", expected_days: 7, available_days: 7, complete: true, start_date: "2026-05-01", end_date: "2026-05-07", dates: [] },
       twenty_eight_days: { minutes: 900, ascent_m: 3000, activity_count: 18, source: "coros_direct", expected_days: 28, available_days: 28, complete: true, start_date: "2026-04-10", end_date: "2026-05-07", dates: [] }
     },
-    limits: ["Ce bilan est une aide à la décision d’entraînement, pas un diagnostic médical."],
-    summary: ["Condition verte."],
+    limits: ["This is training decision support, not medical advice."],
+    summary: ["Green condition."],
     ...partial
   };
 }
@@ -100,7 +100,7 @@ describe("training recommendation", () => {
     );
     expect(recommendation.level).toBe("red");
     expect(recommendation.decision).toBe("swap");
-    expect(recommendation.swap_with?.Séance).toBe("Footing facile");
+    expect(recommendation.swap_with?.Session).toBe("Easy run");
   });
 
   it("reduces a day after a heavy previous activity", () => {
@@ -189,13 +189,13 @@ describe("training recommendation", () => {
             available: ["sleep", "hrv", "resting_hr"],
             missing: []
           },
-          reasons: ["Fatigue COROS élevée (état 5)."]
+          reasons: ["COROS fatigue is elevated (state 5)."]
         },
         flags: [
           {
             level: "orange",
             code: "coros_fatigue_orange",
-            message: "Fatigue COROS élevée isolée (état 5) : réduire la séance plutôt que repos automatique."
+            message: "Isolated elevated COROS fatigue (state 5): reduce instead of forcing automatic rest."
           }
         ]
       })
@@ -203,7 +203,7 @@ describe("training recommendation", () => {
 
     expect(recommendation.level).toBe("orange");
     expect(recommendation.decision).toBe("reduce");
-    expect(recommendation.recommended_session.intensity).toBe("Très facile");
+    expect(recommendation.recommended_session.intensity).toBe("Very easy");
     expect(recommendation.recommended_session.duration_min).toBe(34);
   });
 });

@@ -24,7 +24,7 @@ flowchart TD
 | Component | Path | Role | Public-safe surface |
 | --- | --- | --- | --- |
 | Trail Data Pipeline | `src/trail_data_pipeline/` | Parse activity files, normalize tables, compute trail metrics, render reports | Loaders, normalization, metrics, report code, tests |
-| Notion Training Dashboard | `notion-ventoux-training/` | Generate a structured training dashboard and local dry-run exports | Schemas, seed data, dry-run exporter, tests |
+| Notion Training Dashboard | `notion-trail-goal-training/` | Generate a structured training dashboard and local dry-run exports | Schemas, seed data, dry-run exporter, tests |
 | Morning Training Sync | `runalyze-morning-sync/` | Analyze morning context and decide whether to maintain or adapt the day | Recommendation logic, condition analysis, fixture tests |
 
 ## Data Flow

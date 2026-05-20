@@ -8,11 +8,11 @@ import { seedRows } from "./seedData.js";
 import type { DatabaseKey, Manifest } from "./types.js";
 
 const outputNames: Record<DatabaseKey, string> = {
-  plan: "plan_entrainement.csv",
-  weeklyReview: "bilan_semaine.csv",
-  phases: "phases_ventoux_2027.csv",
-  sessionLibrary: "bibliotheque_seances.csv",
-  rules: "regles.csv"
+  plan: "training_plan.csv",
+  weeklyReview: "weekly_review.csv",
+  phases: "training_phases.csv",
+  sessionLibrary: "session_library.csv",
+  rules: "rules.csv"
 };
 
 function csvEscape(value: unknown): string {
@@ -62,11 +62,11 @@ export async function assertNoSecretWritten(outputDir: string): Promise<void> {
 
   const files = [
     "dashboard.md",
-    "plan_entrainement.csv",
-    "bilan_semaine.csv",
-    "phases_ventoux_2027.csv",
-    "bibliotheque_seances.csv",
-    "regles.csv",
+    "training_plan.csv",
+    "weekly_review.csv",
+    "training_phases.csv",
+    "session_library.csv",
+    "rules.csv",
     "manifest.preview.json",
     "notion_manifest.json",
     "notion_manifest.partial.json"

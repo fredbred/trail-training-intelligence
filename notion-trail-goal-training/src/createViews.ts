@@ -5,17 +5,17 @@ import type { NotionClient } from "./notionClient.js";
 const calendarProperties = [
   "Type",
   "Description",
-  "Durée prévue min",
-  "D+ prévu m",
-  "Intensité cible",
-  "Priorité",
-  "Statut",
+  "Planned duration min",
+  "Planned ascent m",
+  "Target intensity",
+  "Priority",
+  "Status",
   "Notes",
   "Adaptation"
 ];
 
 export const weeklyCalendarViewPreview: CreatedViewInfo = {
-  name: "Calendrier semaine",
+  name: "Weekly calendar",
   type: "calendar",
   databaseKey: "plan",
   dateProperty: "Date",
@@ -29,7 +29,7 @@ export async function createWeeklyPlanCalendarView(
   const dataSource = await notion.retrieveDataSource(planDatabase.dataSourceId);
   const datePropertyId = dataSource.properties["Date"]?.id;
   if (!datePropertyId) {
-    throw new Error("Impossible de créer la vue calendrier : propriété `Date` introuvable dans la data source du plan.");
+    throw new Error("Unable to create the calendar view: `Date` property was not found on the plan data source.");
   }
 
   const response = await notion.createView({

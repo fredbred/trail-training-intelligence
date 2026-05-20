@@ -1,12 +1,12 @@
 import type { ConditionAnalysis, MorningPull, PlannedSession, RecommendationLevel, TrainingRecommendation } from "./types.js";
 
-const hardTypes = new Set(["Côte", "Sortie longue", "Trail", "Rando-course"]);
-const hardIntensities = new Set(["Endurance haute contrôlée", "Tempo côte", "Seuil"]);
+const hardTypes = new Set(["Hill session", "Long run", "Trail run", "Hike-run"]);
+const hardIntensities = new Set(["Controlled steady", "Hill tempo", "Threshold"]);
 type YesterdayLoad = { minutes: number; ascent: number; source?: string };
 
 export function recommendToday(plan: PlannedSession[], pull: MorningPull, today: string, condition?: ConditionAnalysis): TrainingRecommendation {
   const todaySession = plan.find((session) => session.Date === today);
-  const weekSessions = todaySession ? plan.filter((session) => session.Semaine === todaySession.Semaine) : [];
+  const weekSessions = todaySession ? plan.filter((session) => session.Week === todaySession.Week) : [];
   const remainingWeek = weekSessions.filter((session) => session.Date > today);
   const yesterdayLoad = condition
     ? { minutes: condition.yesterday_load.minutes, ascent: condition.yesterday_load.ascent_m, source: condition.yesterday_load.source }
@@ -24,7 +24,7 @@ export function recommendToday(plan: PlannedSession[], pull: MorningPull, today:
       level: signalLevel,
       decision: "replace_easy",
       recommended_session: easyFallback(signalLevel),
-      reasons: unique(["Aucune séance planifiée trouvée pour aujourd’hui.", ...conditionContext.reasons]),
+      reasons: unique(["No planned session was found for today.", ...conditionContext.reasons]),
       data_quality: dataQuality
     };
   }
@@ -34,7 +34,7 @@ export function recommendToday(plan: PlannedSession[], pull: MorningPull, today:
   const missingHealthOnly = !useCondition && signalLevel === "orange" && recovery.reasons.length === 0 && dataQuality.length >= 2;
   const reasons = unique(useCondition ? conditionContext.reasons : recovery.reasons);
   if (heavyYesterday) {
-    reasons.push(`Charge de veille notable (${Math.round(yesterdayLoad.minutes)} min, ${Math.round(yesterdayLoad.ascent)} m D+).`);
+    reasons.push(`Notable previous-day load (${Math.round(yesterdayLoad.minutes)} min, ${Math.round(yesterdayLoad.ascent)} m ascent).`);
   }
 
   if (signalLevel === "red") {
@@ -46,7 +46,7 @@ export function recommendToday(plan: PlannedSession[], pull: MorningPull, today:
       today: todaySession,
       swap_with: hardToday ? findEasySwap(remainingWeek) : undefined,
       recommended_session: restOrMobility(todaySession),
-      reasons: reasons.length ? reasons : ["Signaux récupération insuffisants ou données santé préoccupantes."],
+      reasons: reasons.length ? reasons : ["Recovery signals are insufficient or health metrics are concerning."],
       data_quality: dataQuality
     };
   }
@@ -61,8 +61,8 @@ export function recommendToday(plan: PlannedSession[], pull: MorningPull, today:
         decision: swap ? "swap" : "replace_easy",
         today: todaySession,
         swap_with: swap,
-        recommended_session: swap ? sessionToRecommendation(swap, "Séance facile échangée avec la séance clé du jour.") : reduceSession(todaySession, 0.65),
-        reasons: reasons.length ? reasons : ["Séance clé prévue alors que la récupération ou la charge récente appellent de la prudence."],
+        recommended_session: swap ? sessionToRecommendation(swap, "Easy session swapped with today's key session.") : reduceSession(todaySession, 0.65),
+        reasons: reasons.length ? reasons : ["A key session was planned while recovery or recent load calls for caution."],
         data_quality: dataQuality
       };
     }
@@ -74,8 +74,8 @@ export function recommendToday(plan: PlannedSession[], pull: MorningPull, today:
         level: "orange",
         decision: "maintain",
         today: todaySession,
-        recommended_session: sessionToRecommendation(todaySession, "Séance facile maintenue malgré données santé incomplètes. Se réévaluer à l’échauffement."),
-        reasons: ["Métriques santé incomplètes, sans autre signal de charge détecté."],
+        recommended_session: sessionToRecommendation(todaySession, "Easy session maintained despite incomplete health metrics. Reassess during warm-up."),
+        reasons: ["Health metrics are incomplete, with no other load warning detected."],
         data_quality: dataQuality
       };
     }
@@ -87,7 +87,7 @@ export function recommendToday(plan: PlannedSession[], pull: MorningPull, today:
       decision: "reduce",
       today: todaySession,
       recommended_session: reduceSession(todaySession, 0.75),
-      reasons: reasons.length ? reasons : ["Garder la fréquence mais réduire la charge du jour."],
+      reasons: reasons.length ? reasons : ["Keep frequency but reduce today's load."],
       data_quality: dataQuality
     };
   }
@@ -98,8 +98,8 @@ export function recommendToday(plan: PlannedSession[], pull: MorningPull, today:
     level: "green",
     decision: "maintain",
     today: todaySession,
-    recommended_session: sessionToRecommendation(todaySession, "Séance maintenue."),
-    reasons: reasons.length ? reasons : ["Aucun signal d’alerte détecté dans les données disponibles."],
+    recommended_session: sessionToRecommendation(todaySession, "Session maintained."),
+    reasons: reasons.length ? reasons : ["No warning signal detected in the available data."],
     data_quality: dataQuality
   };
 }
@@ -108,9 +108,9 @@ function summarizeCondition(condition: ConditionAnalysis | undefined): { level: 
   if (!condition) return { level: "green", reasons: [], dataQuality: [] };
 
   const alertFlags = condition.flags.filter((flag) => flag.level !== "green");
-  const reasons = alertFlags.map((flag) => `Bilan condition : ${flag.message}`);
+  const reasons = alertFlags.map((flag) => `Condition report: ${flag.message}`);
   if (!reasons.length && condition.summary[0]) {
-    reasons.push(`Bilan condition : ${condition.summary[0]}`);
+    reasons.push(`Condition report: ${condition.summary[0]}`);
   }
 
   const dataQuality = condition.data_quality.missing.map((item) => `condition_${item}_missing`);
@@ -129,11 +129,11 @@ function summarizeCondition(condition: ConditionAnalysis | undefined): { level: 
 }
 
 function isHard(session: PlannedSession): boolean {
-  return hardTypes.has(session.Type) || hardIntensities.has(session["Intensité cible"]) || session["RPE cible"] >= 5 || session["Durée prévue min"] >= 120;
+  return hardTypes.has(session.Type) || hardIntensities.has(session["Target intensity"]) || session["Target RPE"] >= 5 || session["Planned duration min"] >= 120;
 }
 
 function findEasySwap(sessions: PlannedSession[]): PlannedSession | undefined {
-  return sessions.find((session) => !isHard(session) && session.Type !== "Repos") ?? sessions.find((session) => session.Type === "Repos");
+  return sessions.find((session) => !isHard(session) && session.Type !== "Rest") ?? sessions.find((session) => session.Type === "Rest");
 }
 
 function estimateYesterdayLoad(pull: MorningPull): YesterdayLoad {
@@ -157,7 +157,7 @@ function evaluateRecovery(pull: MorningPull): { level: RecommendationLevel; reas
   if (!health && Object.keys(healthDetails).length === 0) {
     return {
       level: "orange",
-      reasons: ["Métriques santé Runalyze absentes : appliquer une prudence légère."],
+      reasons: ["Runalyze health metrics are missing; apply light caution."],
       dataQuality: ["health_missing"]
     };
   }
@@ -181,20 +181,20 @@ function evaluateRecovery(pull: MorningPull): { level: RecommendationLevel; reas
   let score = 0;
   if (sleepHours !== undefined && sleepHours < 5.5) {
     score += 2;
-    reasons.push(`Sommeil court (${sleepHours.toFixed(1)} h).`);
+    reasons.push(`Short sleep (${sleepHours.toFixed(1)} h).`);
   } else if (sleepHours !== undefined && sleepHours < 6.5) {
     score += 1;
-    reasons.push(`Sommeil moyen (${sleepHours.toFixed(1)} h).`);
+    reasons.push(`Moderate sleep (${sleepHours.toFixed(1)} h).`);
   }
 
   if (restingHr !== undefined && restingHr >= 60) {
     score += 1;
-    reasons.push(`FC repos élevée ou à surveiller (${Math.round(restingHr)} bpm).`);
+    reasons.push(`Resting HR is elevated or worth monitoring (${Math.round(restingHr)} bpm).`);
   }
 
   if (hrv !== undefined && hrv > 0 && hrv < 35) {
     score += 1;
-    reasons.push(`HRV basse ou à surveiller (${Math.round(hrv)}).`);
+    reasons.push(`HRV is low or worth monitoring (${Math.round(hrv)}).`);
   }
 
   if (score >= 2) return { level: "red", reasons, dataQuality };
@@ -315,45 +315,45 @@ function firstPositiveNumber(record: Record<string, unknown>, keys: string[]): n
 
 function sessionToRecommendation(session: PlannedSession, notes: string) {
   return {
-    name: session.Séance,
-    duration_min: session["Durée prévue min"],
-    ascent_m: session["D+ prévu m"],
-    intensity: session["Intensité cible"],
-    fc_cap_bpm: session["FC cap bpm"],
+    name: session.Session,
+    duration_min: session["Planned duration min"],
+    ascent_m: session["Planned ascent m"],
+    intensity: session["Target intensity"],
+    fc_cap_bpm: session["HR cap bpm"],
     notes
   };
 }
 
 function reduceSession(session: PlannedSession, factor: number) {
   return {
-    name: `${session.Séance} — version allégée`,
-    duration_min: Math.max(20, Math.round(session["Durée prévue min"] * factor)),
-    ascent_m: Math.round(session["D+ prévu m"] * factor),
-    intensity: session["Intensité cible"] === "Repos" ? "Repos" : "Très facile",
-    fc_cap_bpm: Math.min(session["FC cap bpm"] ?? 140, 140),
-    notes: "Réduire la charge, supprimer les fractions/lignes rapides, rester facile."
+    name: `${session.Session} - reduced version`,
+    duration_min: Math.max(20, Math.round(session["Planned duration min"] * factor)),
+    ascent_m: Math.round(session["Planned ascent m"] * factor),
+    intensity: session["Target intensity"] === "Rest" ? "Rest" : "Very easy",
+    fc_cap_bpm: Math.min(session["HR cap bpm"] ?? 140, 140),
+    notes: "Reduce load, remove intervals or fast strides, and stay easy."
   };
 }
 
 function restOrMobility(session: PlannedSession) {
   return {
-    name: `${session.Séance} — remplacée par repos/mobilité`,
+    name: `${session.Session} - replaced by rest/mobility`,
     duration_min: 20,
     ascent_m: 0,
-    intensity: "Repos",
+    intensity: "Rest",
     fc_cap_bpm: undefined,
-    notes: "Repos, mobilité douce ou marche. Ne pas rattraper la séance demain."
+    notes: "Rest, gentle mobility or walking. Do not make up the session tomorrow."
   };
 }
 
 function easyFallback(level: RecommendationLevel) {
   return {
-    name: level === "red" ? "Repos / mobilité" : "Endurance très facile",
+    name: level === "red" ? "Rest / mobility" : "Very easy endurance",
     duration_min: level === "red" ? 20 : 40,
     ascent_m: 0,
-    intensity: level === "red" ? "Repos" : "Très facile",
+    intensity: level === "red" ? "Rest" : "Very easy",
     fc_cap_bpm: level === "red" ? undefined : 140,
-    notes: "Suggestion par défaut faute de séance planifiée."
+    notes: "Default suggestion because no planned session was found."
   };
 }
 

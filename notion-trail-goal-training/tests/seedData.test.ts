@@ -32,63 +32,63 @@ describe("seed data", () => {
     const allowed = {
       phase: new Set(getSelectOptionNames(plan, "Phase")),
       type: new Set(getSelectOptionNames(plan, "Type")),
-      intensity: new Set(getSelectOptionNames(plan, "Intensité cible")),
-      priority: new Set(getSelectOptionNames(plan, "Priorité")),
-      status: new Set(getSelectOptionNames(plan, "Statut"))
+      intensity: new Set(getSelectOptionNames(plan, "Target intensity")),
+      priority: new Set(getSelectOptionNames(plan, "Priority")),
+      status: new Set(getSelectOptionNames(plan, "Status"))
     };
 
     for (const row of seedRows.plan) {
-      expect(allowed.phase.has(row.Phase), row.Séance).toBe(true);
-      expect(allowed.type.has(row.Type), row.Séance).toBe(true);
-      expect(allowed.intensity.has(row["Intensité cible"]), row.Séance).toBe(true);
-      expect(allowed.priority.has(row.Priorité), row.Séance).toBe(true);
-      expect(allowed.status.has(row.Statut), row.Séance).toBe(true);
+      expect(allowed.phase.has(row.Phase), row.Session).toBe(true);
+      expect(allowed.type.has(row.Type), row.Session).toBe(true);
+      expect(allowed.intensity.has(row["Target intensity"]), row.Session).toBe(true);
+      expect(allowed.priority.has(row.Priority), row.Session).toBe(true);
+      expect(allowed.status.has(row.Status), row.Session).toBe(true);
     }
   });
 
   it("adds a usable description to every planned session", () => {
     for (const row of seedRows.plan) {
-      expect(row.Description, row.Séance).toBeTruthy();
-      expect(row.Description.length, row.Séance).toBeGreaterThan(20);
+      expect(row.Description, row.Session).toBeTruthy();
+      expect(row.Description.length, row.Session).toBeGreaterThan(20);
     }
   });
 
   it("keeps weekly reviews, phases, library and rules inside allowed options", () => {
-    const weeklyDecision = new Set(getSelectOptionNames(databaseSchemas.weeklyReview, "Décision semaine suivante"));
+    const weeklyDecision = new Set(getSelectOptionNames(databaseSchemas.weeklyReview, "Next week decision"));
     const libraryType = new Set(getSelectOptionNames(databaseSchemas.sessionLibrary, "Type"));
-    const libraryPriority = new Set(getSelectOptionNames(databaseSchemas.sessionLibrary, "Priorité"));
+    const libraryPriority = new Set(getSelectOptionNames(databaseSchemas.sessionLibrary, "Priority"));
 
     for (const row of seedRows.weeklyReview) {
-      expectIsoDate(row["Semaine du"]);
+      expectIsoDate(row["Week of"]);
       expect(phaseOptions).toContain(row.Phase);
-      expect(weeklyDecision.has(row["Décision semaine suivante"])).toBe(true);
+      expect(weeklyDecision.has(row["Next week decision"])).toBe(true);
     }
     for (const row of seedRows.phases) {
       expect(phaseOptions).toContain(row.Phase);
     }
     for (const row of seedRows.sessionLibrary) {
-      expect(libraryType.has(row.Type), row.Séance).toBe(true);
-      expect(libraryPriority.has(row.Priorité), row.Séance).toBe(true);
+      expect(libraryType.has(row.Type), row.Session).toBe(true);
+      expect(libraryPriority.has(row.Priority), row.Session).toBe(true);
     }
     for (const row of seedRows.rules) {
-      expect(ruleCategoryOptions).toContain(row.Catégorie);
+      expect(ruleCategoryOptions).toContain(row.Category);
     }
   });
 
   it("generates dry-run files without writing tokens", async () => {
     const previousToken = process.env.NOTION_TOKEN;
     process.env.NOTION_TOKEN = "TOKEN_TEST_DO_NOT_LEAK";
-    const outputDir = await mkdtemp(join(tmpdir(), "notion-ventoux-dry-run-"));
+    const outputDir = await mkdtemp(join(tmpdir(), "notion-trail-goal-dry-run-"));
 
     await writeDryRunOutput(outputDir);
 
     const files = [
       "dashboard.md",
-      "plan_entrainement.csv",
-      "bilan_semaine.csv",
-      "phases_ventoux_2027.csv",
-      "bibliotheque_seances.csv",
-      "regles.csv",
+      "training_plan.csv",
+      "weekly_review.csv",
+      "training_phases.csv",
+      "session_library.csv",
+      "rules.csv",
       "manifest.preview.json"
     ];
 

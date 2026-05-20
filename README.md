@@ -89,7 +89,7 @@ python3 -m pytest
 Notion dashboard:
 
 ```bash
-cd notion-ventoux-training
+cd notion-trail-goal-training
 npm test
 ```
 

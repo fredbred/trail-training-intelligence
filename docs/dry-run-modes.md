@@ -24,7 +24,7 @@ Safety controls:
 The Notion tool has a local dry-run that writes Markdown and CSV files without calling Notion.
 
 ```bash
-cd notion-ventoux-training
+cd notion-trail-goal-training
 npm run dry-run
 npm test
 ```

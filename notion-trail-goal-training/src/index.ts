@@ -13,7 +13,7 @@ import { databaseSchemas } from "./schemas.js";
 import { seedRows } from "./seedData.js";
 import type { DatabaseKey, Manifest, NotionConfig } from "./types.js";
 
-const ROOT_TITLE = "Grand Raid Ventoux 2027";
+const ROOT_TITLE = "Your Trail Goal";
 const OUTPUT_DIR = "output";
 const NOTION_MANIFEST = join(OUTPUT_DIR, "notion_manifest.json");
 const PARTIAL_MANIFEST = join(OUTPUT_DIR, "notion_manifest.partial.json");
@@ -27,7 +27,7 @@ type CliArgs = {
 function parseArgs(argv: string[]): CliArgs {
   const [command, ...flags] = argv;
   if (command !== "dry-run" && command !== "create-notion") {
-    throw new Error("Commande invalide. Utiliser `dry-run` ou `create-notion`.");
+    throw new Error("Invalid command. Use `dry-run` or `create-notion`.");
   }
   return {
     command,
@@ -59,7 +59,7 @@ function loadConfig(): NotionConfig {
     .map(([name]) => name);
 
   if (missing.length > 0) {
-    throw new Error(`Variables manquantes: ${missing.join(", ")}. Creer un .env local puis renseigner les valeurs.`);
+    throw new Error(`Missing variables: ${missing.join(", ")}. Create a local .env file and fill in the values.`);
   }
 
   return { token: token as string, parentPageId: parentPageId as string, notionVersion };
@@ -72,7 +72,7 @@ async function writeManifest(path: string, manifest: Manifest): Promise<void> {
 
 async function createNotion(force: boolean): Promise<void> {
   if ((await exists(NOTION_MANIFEST)) && !force) {
-    throw new Error("output/notion_manifest.json existe déjà. Relancer avec `npm run create-notion -- --force` pour créer une nouvelle structure.");
+    throw new Error("output/notion_manifest.json already exists. Rerun with `npm run create-notion -- --force` to create a new structure.");
   }
 
   const config = loadConfig();
@@ -113,8 +113,8 @@ async function createNotion(force: boolean): Promise<void> {
     }
 
     await writeManifest(NOTION_MANIFEST, manifest);
-    console.log(`Structure Notion créée: ${manifest.root_page_url ?? manifest.root_page_id}`);
-    console.log(`Manifeste écrit: ${NOTION_MANIFEST}`);
+    console.log(`Created Notion structure: ${manifest.root_page_url ?? manifest.root_page_id}`);
+    console.log(`Wrote manifest: ${NOTION_MANIFEST}`);
   } catch (error) {
     manifest.mode = "partial";
     await writeManifest(PARTIAL_MANIFEST, manifest);
@@ -125,15 +125,15 @@ async function createNotion(force: boolean): Promise<void> {
 function printError(error: unknown): void {
   if (error instanceof NotionApiError) {
     console.error(error.message);
-    console.error(`Statut HTTP Notion: ${error.status}`);
-    console.error(`Manifeste partiel éventuel: ${PARTIAL_MANIFEST}`);
+    console.error(`Notion HTTP status: ${error.status}`);
+    console.error(`Possible partial manifest: ${PARTIAL_MANIFEST}`);
     return;
   }
   if (error instanceof Error) {
     console.error(error.message);
     return;
   }
-  console.error("Erreur inconnue.");
+  console.error("Unknown error.");
 }
 
 async function main(): Promise<void> {

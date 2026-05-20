@@ -12,17 +12,17 @@ describe("database schemas", () => {
     }
   });
 
-  it("uses a select property for Statut", () => {
-    const statut = databaseSchemas.plan.properties["Statut"];
-    expect(statut).toHaveProperty("select");
-    if ("select" in statut) {
-      expect(statut.select.options.map((option) => option.name)).toEqual(statusOptions);
+  it("uses a select property for Status", () => {
+    const status = databaseSchemas.plan.properties["Status"];
+    expect(status).toHaveProperty("select");
+    if ("select" in status) {
+      expect(status.select.options.map((option) => option.name)).toEqual(statusOptions);
     }
   });
 
   it("declares the weekly calendar view on the training plan date", () => {
     expect(weeklyCalendarViewPreview).toEqual({
-      name: "Calendrier semaine",
+      name: "Weekly calendar",
       type: "calendar",
       databaseKey: "plan",
       dateProperty: "Date",

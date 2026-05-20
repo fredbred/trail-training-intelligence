@@ -10,7 +10,7 @@ Trail Training Intelligence
   src/trail_data_pipeline/          # Python loaders, normalization, metrics, reports
   tests/                            # Python fixture tests
 
-  notion-ventoux-training/          # TypeScript Notion schema and dry-run exporter
+  notion-trail-goal-training/          # TypeScript Notion schema and dry-run exporter
     src/
     tests/
 
