@@ -1,5 +1,7 @@
 # Trail Training Intelligence
 
+[![CI](https://github.com/fredbred/trail-training-intelligence/actions/workflows/ci.yml/badge.svg)](https://github.com/fredbred/trail-training-intelligence/actions/workflows/ci.yml)
+
 Local-first training intelligence for trail running. The system turns messy watch exports, training-plan data, and morning recovery/load signals into inspectable reports and guarded recommendations.
 
 This public repository is a safe portfolio version. Examples are synthetic or anonymized, and private exports, credentials, health records, generated reports, Notion IDs, token stores, and undocumented COROS integration details are intentionally excluded.
