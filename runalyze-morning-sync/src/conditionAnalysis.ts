@@ -460,7 +460,7 @@ function buildFlags(load: ConditionLoad, recovery: ConditionRecovery, dataQualit
   if (recovery.level === "red") {
     flags.push({ level: "red", code: "recovery_red", message: "Score récupération bas avec les métriques disponibles." });
   } else if (recovery.level === "orange") {
-    flags.push({ level: "orange", code: "recovery_orange", message: "Récupération à surveiller ou métriques santé incomplètes." });
+    flags.push({ level: "orange", code: "recovery_orange", message: recoveryOrangeMessage(recovery) });
   }
 
   if (recovery.metrics.coros_training_load_ratio !== undefined && recovery.metrics.coros_training_load_ratio >= 2) {
@@ -489,6 +489,19 @@ function buildFlags(load: ConditionLoad, recovery: ConditionRecovery, dataQualit
   }
 
   return flags;
+}
+
+function recoveryOrangeMessage(recovery: ConditionRecovery): string {
+  if (recovery.reasons.length) {
+    return `Récupération à surveiller : ${recovery.reasons.join(" ")}`;
+  }
+  if (recovery.metrics.missing.length >= 2) {
+    return `Récupération à surveiller : métriques santé incomplètes (${recovery.metrics.missing.join(", ")}).`;
+  }
+  if (recovery.metrics.missing.length === 1) {
+    return `Récupération à surveiller : métrique santé manquante (${recovery.metrics.missing[0]}).`;
+  }
+  return "Récupération à surveiller avec les métriques disponibles.";
 }
 
 function corosFatigueRisk(metrics: ConditionMetricSnapshot): ConditionFlag {

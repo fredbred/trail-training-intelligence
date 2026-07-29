@@ -129,7 +129,7 @@ function summarizeCondition(condition: ConditionAnalysis | undefined): { level: 
 }
 
 function isHard(session: PlannedSession): boolean {
-  return hardTypes.has(session.Type) || hardIntensities.has(session["Target intensity"]) || session["Target RPE"] >= 5 || session["Planned duration min"] >= 120;
+  return hardTypes.has(session.Type) || hardIntensities.has(sessionIntensity(session)) || sessionRpe(session) >= 5 || sessionDuration(session) >= 120;
 }
 
 function findEasySwap(sessions: PlannedSession[]): PlannedSession | undefined {
@@ -315,29 +315,29 @@ function firstPositiveNumber(record: Record<string, unknown>, keys: string[]): n
 
 function sessionToRecommendation(session: PlannedSession, notes: string) {
   return {
-    name: session.Session,
-    duration_min: session["Planned duration min"],
-    ascent_m: session["Planned ascent m"],
-    intensity: session["Target intensity"],
-    fc_cap_bpm: session["HR cap bpm"],
+    name: sessionName(session),
+    duration_min: sessionDuration(session),
+    ascent_m: sessionAscent(session),
+    intensity: sessionIntensity(session),
+    fc_cap_bpm: sessionHrCap(session),
     notes
   };
 }
 
 function reduceSession(session: PlannedSession, factor: number) {
   return {
-    name: `${session.Session} - reduced version`,
-    duration_min: Math.max(20, Math.round(session["Planned duration min"] * factor)),
-    ascent_m: Math.round(session["Planned ascent m"] * factor),
-    intensity: session["Target intensity"] === "Rest" ? "Rest" : "Very easy",
-    fc_cap_bpm: Math.min(session["HR cap bpm"] ?? 140, 140),
+    name: `${sessionName(session)} - reduced version`,
+    duration_min: Math.max(20, Math.round(sessionDuration(session) * factor)),
+    ascent_m: Math.round(sessionAscent(session) * factor),
+    intensity: sessionIntensity(session) === "Rest" || sessionIntensity(session) === "Repos" ? sessionIntensity(session) : "Very easy",
+    fc_cap_bpm: Math.min(sessionHrCap(session) ?? 140, 140),
     notes: "Reduce load, remove intervals or fast strides, and stay easy."
   };
 }
 
 function restOrMobility(session: PlannedSession) {
   return {
-    name: `${session.Session} - replaced by rest/mobility`,
+    name: `${sessionName(session)} - replaced by rest/mobility`,
     duration_min: 20,
     ascent_m: 0,
     intensity: "Rest",
@@ -364,4 +364,28 @@ function maxLevel(left: RecommendationLevel, right: RecommendationLevel): Recomm
 
 function unique(values: string[]): string[] {
   return [...new Set(values)];
+}
+
+function sessionName(session: PlannedSession): string {
+  return session.Session ?? session.Séance ?? "Planned session";
+}
+
+function sessionDuration(session: PlannedSession): number {
+  return session["Planned duration min"] ?? session["Durée prévue min"] ?? 0;
+}
+
+function sessionAscent(session: PlannedSession): number {
+  return session["Planned ascent m"] ?? session["D+ prévu m"] ?? 0;
+}
+
+function sessionIntensity(session: PlannedSession): string {
+  return session["Target intensity"] ?? session["Intensité cible"] ?? "";
+}
+
+function sessionHrCap(session: PlannedSession): number | undefined {
+  return session["HR cap bpm"] ?? session["FC cap bpm"];
+}
+
+function sessionRpe(session: PlannedSession): number {
+  return session["Target RPE"] ?? session["RPE cible"] ?? 0;
 }

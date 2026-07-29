@@ -230,6 +230,39 @@ describe("condition analysis", () => {
     expect(renderConditionMarkdown(analysis)).toContain("VO2max COROS");
   });
 
+  it("explains orange recovery from complete metrics instead of calling data incomplete", () => {
+    const analysis = analyzeCondition(
+      [
+        pull("2026-06-21", {
+          activities: [],
+          health: { sleep: null, heartRateRest: null, hrv: null }
+        })
+      ],
+      { date: "2026-06-22", pullDate: "2026-06-21", metricsDate: "2026-06-22", createdAt: "2026-06-22T06:00:00Z" },
+      [
+        {
+          ...corosPull("2026-06-21", {
+            date: "2026-06-22",
+            sleep_hours: 7.8,
+            rhr_bpm: 50,
+            avg_sleep_hrv: 44,
+            sleep_hrv_baseline: 49,
+            training_load: 110,
+            training_load_ratio: 0.72,
+            fatigue_state: 2
+          }),
+          activity_count: 0,
+          activities: []
+        }
+      ]
+    );
+
+    const recoveryFlag = analysis.flags.find((flag) => flag.code === "recovery_orange");
+    expect(analysis.data_quality.missing).toEqual([]);
+    expect(recoveryFlag?.message).toContain("HRV COROS très sous baseline");
+    expect(recoveryFlag?.message).not.toContain("métriques santé incomplètes");
+  });
+
   it("prefers COROS mobile sleep duration over time in bed", () => {
     const analysis = analyzeCondition(
       [

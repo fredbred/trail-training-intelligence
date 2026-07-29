@@ -69,21 +69,49 @@ export type CorosDirectPull = {
   recent_days: CorosDailyMetrics[];
   activity_count?: number;
   activities?: CorosActivity[];
+  week_list?: unknown;
+  sport_statistic?: unknown;
+  profile?: {
+    max_hr_bpm?: number;
+    resting_hr_bpm?: number;
+    zones?: unknown;
+  };
   notes: string[];
 };
 
 export type PlannedSession = {
-  "Session": string;
+  "Session"?: string;
+  "Séance"?: string;
   "Date": string;
-  "Week": string;
+  "Week"?: string;
+  "Semaine"?: string;
+  "Phase"?: string;
   "Type": string;
-  "Planned duration min": number;
-  "Planned ascent m": number;
-  "Target intensity": string;
+  "Description"?: string;
+  "Planned duration min"?: number;
+  "Durée prévue min"?: number;
+  "Planned ascent m"?: number;
+  "D+ prévu m"?: number;
+  "Target intensity"?: string;
+  "Intensité cible"?: string;
   "HR cap bpm"?: number;
-  "Target RPE": number;
-  "Priority": string;
-  "Notes": string;
+  "FC cap bpm"?: number;
+  "Target RPE"?: number;
+  "RPE cible"?: number;
+  "Priority"?: string;
+  "Priorité"?: string;
+  "Status"?: string;
+  "Statut"?: string;
+  "Completed duration min"?: number;
+  "Durée réalisée min"?: number;
+  "Completed ascent m"?: number;
+  "D+ réalisé m"?: number;
+  "Completed RPE"?: number;
+  "RPE réalisé"?: number;
+  "Avg HR"?: number;
+  "FC moyenne"?: number;
+  "Notes"?: string;
+  "Adaptation"?: string;
 };
 
 export type RecommendationLevel = "green" | "orange" | "red";

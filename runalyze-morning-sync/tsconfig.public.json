@@ -3,6 +3,7 @@
   "include": [
     "src/types.ts",
     "src/recommendation.ts",
+    "src/rollingPlan.ts",
     "src/conditionAnalysis.ts",
     "src/planCsv.ts",
     "src/dates.ts",

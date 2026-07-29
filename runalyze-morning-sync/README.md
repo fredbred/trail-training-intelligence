@@ -9,8 +9,9 @@ This public version keeps the safe engineering signal: condition analysis, trend
 - Reads local morning context objects when available.
 - Scores recovery and recent load from sleep, HRV, resting heart rate, fatigue/load signals, ascent, duration, and trend history.
 - Recommends one of: maintain, reduce, replace with easy, rest, or swap with another session in the week.
+- Produces conservative rolling-plan update proposals, such as marking yesterday done/skipped and carrying only selected missed strength work into a nearby easy slot.
 - Handles missing data explicitly through data-quality flags.
-- Keeps mutating planning actions outside the public-safe surface.
+- Keeps external writes to planning tools outside the public-safe surface.
 
 ## Public-Safe Commands
 
@@ -20,7 +21,7 @@ npm run build:logic
 npm run test:logic
 ```
 
-`test:logic` runs fixture-based tests for recommendation, condition analysis, date handling, retry behavior, and plan CSV parsing. It does not require credentials or network access.
+`test:logic` runs fixture-based tests for recommendation, condition analysis, rolling-plan proposals, date handling, retry behavior, and plan CSV parsing. It does not require credentials or network access.
 
 ## Privacy Boundary
 

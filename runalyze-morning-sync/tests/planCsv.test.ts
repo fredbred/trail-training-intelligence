@@ -54,6 +54,30 @@ describe("plan CSV", () => {
     });
   });
 
+  it("parses French Notion export headers", () => {
+    const plan = parsePlanCsv(
+      [
+        "Séance,Date,Semaine,Phase,Type,Description,Durée prévue min,D+ prévu m,Intensité cible,FC cap bpm,RPE cible,Priorité,Statut,Durée réalisée min,D+ réalisé m,RPE réalisé,FC moyenne,Notes,Adaptation",
+        '45 min facile + 5 x 20 s relâchées,2026-05-21,2026-W21,Consolidation,Course facile,"Course facile.",55,250,Endurance facile,145,3,B,Prévu,,,,,,'
+      ].join("\n")
+    );
+
+    expect(plan).toHaveLength(1);
+    expect(plan[0]).toMatchObject({
+      "Session": "45 min facile + 5 x 20 s relâchées",
+      "Date": "2026-05-21",
+      "Week": "2026-W21",
+      "Type": "Course facile",
+      "Planned duration min": 55,
+      "Planned ascent m": 250,
+      "Target intensity": "Endurance facile",
+      "HR cap bpm": 145,
+      "Target RPE": 3,
+      "Priority": "B",
+      "Notes": ""
+    });
+  });
+
   it("finds a session by date and optional name filter", () => {
     const plan = parsePlanCsv(
       [
