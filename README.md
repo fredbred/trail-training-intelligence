@@ -44,6 +44,13 @@ More detail: [docs/architecture.md](docs/architecture.md).
 
 ## Example Output
 
+Rendered by the pipeline's own plotting code from a synthetic 16-week block
+([examples/generate_readme_figures.py](examples/generate_readme_figures.py)):
+
+![Weekly and rolling estimated load](examples/synthetic/figures/estimated_load.png)
+
+![Trail specificity: ascent per hour](examples/synthetic/figures/trail_specificity.png)
+
 Synthetic examples live in [examples/synthetic](examples/synthetic).
 
 | Output | Example |
