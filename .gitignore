@@ -63,8 +63,13 @@ runalyze-morning-sync/src/index.ts
 runalyze-morning-sync/src/runalyzeClient.ts
 runalyze-morning-sync/src/coros*.ts
 runalyze-morning-sync/src/notionDailySync.ts
+runalyze-morning-sync/src/typesInternal.ts
 runalyze-morning-sync/tests/coros*.test.ts
 runalyze-morning-sync/tests/notionDailySync.test.ts
+
+# Private ops runbook and personal goal-training workspace.
+docs/cloud-morning-routine.md
+notion-ventoux-training/
 
 # Local plotting/cache artifacts.
 .matplotlib/
