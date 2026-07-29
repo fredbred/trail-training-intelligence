@@ -1,6 +1,6 @@
 # Architecture
 
-Trail Training Intelligence is a local-first workspace with three related systems. Each system can be understood and tested without publishing private account data.
+Trail Training Intelligence is a local-first workspace with four related systems. Each system can be understood and tested without publishing private account data.
 
 ```mermaid
 flowchart TD
@@ -17,6 +17,10 @@ flowchart TD
   K --> L["Recommendation engine"]
   L --> M["Maintain, reduce, rest, replace, or swap"]
   M --> N["Optional guarded planning action"]
+
+  O["GPX course"] --> P["Course parsing and segmentation"]
+  P --> Q["Grade-adjusted pacing model"]
+  Q --> R["Per-segment pacing plan: CSV, Markdown"]
 ```
 
 ## Components
@@ -24,6 +28,7 @@ flowchart TD
 | Component | Path | Role | Public-safe surface |
 | --- | --- | --- | --- |
 | Trail Data Pipeline | `src/trail_data_pipeline/` | Parse activity files, normalize tables, compute trail metrics, render reports | Loaders, normalization, metrics, report code, tests |
+| Pacing Planner | `src/trail_data_pipeline/pacing.py` | Parse GPX courses and build grade-adjusted per-segment pacing plans | Parsing, model, segmentation, rendering, CLI, tests |
 | Notion Training Dashboard | `notion-trail-goal-training/` | Generate a structured training dashboard and local dry-run exports | Schemas, seed data, dry-run exporter, tests |
 | Morning Training Sync | `runalyze-morning-sync/` | Analyze morning context and decide whether to maintain or adapt the day | Recommendation logic, condition analysis, fixture tests |
 
@@ -36,6 +41,7 @@ flowchart TD
 5. Reporting writes CSV and Markdown artifacts to a caller-chosen output directory.
 6. The Notion tool can generate local Markdown/CSV first, then create the dashboard only when credentials and a parent page are supplied.
 7. The morning logic consumes local context snapshots and produces a recommendation with reasons and data-quality flags.
+8. The pacing planner parses a GPX course, splits it into distance segments, weights each segment with a documented grade-adjusted cost model, and renders a per-segment plan from a flat pace or a target time.
 
 ## Safety Boundaries
 

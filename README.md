@@ -10,6 +10,7 @@ This public repository is a safe portfolio version. Examples are synthetic or an
 
 - Parses local COROS-style ZIP, FIT, and TCX activity exports into normalized activity, record, and lap tables.
 - Computes weekly/monthly volume, distance, ascent, trail specificity, long runs, back-to-back blocks, heart-rate zones, estimated load, acute/chronic load ratio, and data-quality flags.
+- Builds grade-adjusted pacing plans from GPX courses (Minetti energy-cost model with documented limits), from either a flat pace or a target finish time.
 - Generates CSV, Markdown, and chart-oriented report outputs.
 - Builds a Notion training-dashboard structure with local Markdown/CSV dry-runs before any Notion write.
 - Evaluates morning training context and recommends whether to maintain, reduce, rest, replace with an easy session, or swap sessions within the week.
@@ -59,6 +60,7 @@ Synthetic examples live in [examples/synthetic](examples/synthetic).
 | Normalized activities | [activities.csv](examples/synthetic/activities.csv) |
 | Weekly summary | [summary_weekly.csv](examples/synthetic/summary_weekly.csv) |
 | Morning recommendation | [morning-recommendation.md](examples/synthetic/morning-recommendation.md) |
+| Pacing plan from a GPX course | [pacing-plan.md](examples/synthetic/pacing-plan.md) |
 | Notion dry-run preview | [notion-dashboard-preview.md](examples/synthetic/notion-dashboard-preview.md) |
 
 ## Tech Stack

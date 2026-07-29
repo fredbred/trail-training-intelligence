@@ -7,7 +7,7 @@ Trail Training Intelligence
   pyproject.toml
   setup.py
 
-  src/trail_data_pipeline/          # Python loaders, normalization, metrics, reports
+  src/trail_data_pipeline/          # Python loaders, normalization, metrics, pacing, reports
   tests/                            # Python fixture tests
 
   notion-trail-goal-training/          # TypeScript Notion schema and dry-run exporter

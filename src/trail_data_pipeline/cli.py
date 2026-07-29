@@ -10,6 +10,16 @@ from .loaders.base import SUPPORTED_EXTENSIONS, LoadedActivity, MissingDependenc
 from .loaders.zip_loader import load_activity_path, load_zip_file
 from .metrics import compute_analysis, load_config
 from .normalization import normalize_loaded_activities
+from .pacing import (
+    DEFAULT_MIN_DESCENT_FACTOR,
+    build_pacing_plan,
+    build_segments,
+    format_hms,
+    parse_duration_min,
+    parse_gpx_course,
+    parse_pace_min_per_km,
+    render_pacing_markdown,
+)
 from .plots import create_plots
 from .report import render_report
 
@@ -126,6 +136,42 @@ def analyze(args: argparse.Namespace) -> int:
     return 0
 
 
+def pacing(args: argparse.Namespace) -> int:
+    """Build a grade-adjusted pacing plan from a GPX course."""
+
+    _configure_logging(args.verbose)
+    output_dir = Path(args.output)
+    try:
+        course = parse_gpx_course(Path(args.course))
+        segments = build_segments(
+            course,
+            segment_m=args.segment_km * 1000.0,
+            min_descent_factor=args.min_descent_factor,
+        )
+        plan = build_pacing_plan(
+            segments,
+            flat_pace_min_per_km=parse_pace_min_per_km(args.flat_pace) if args.flat_pace else None,
+            target_time_min=parse_duration_min(args.target_time) if args.target_time else None,
+        )
+    except (ValueError, FileNotFoundError) as exc:
+        logger.error(str(exc))
+        return 2
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    plan.segments.to_csv(output_dir / "pacing_plan.csv", index=False)
+    markdown = render_pacing_markdown(plan, course, min_descent_factor=args.min_descent_factor)
+    (output_dir / "pacing_plan.md").write_text(markdown, encoding="utf-8")
+
+    logger.info(
+        "Pacing plan: %.1f km, %.0f m D+, total %s",
+        plan.total_distance_km,
+        plan.total_ascent_m,
+        format_hms(plan.total_time_min),
+    )
+    logger.info("Wrote pacing plan to: %s", output_dir)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build CLI parser."""
 
@@ -146,6 +192,31 @@ def build_parser() -> argparse.ArgumentParser:
     )
     analyze_parser.add_argument("--verbose", action="store_true", help="Enable debug logging")
     analyze_parser.set_defaults(func=analyze)
+
+    pacing_parser = subparsers.add_parser(
+        "pacing", help="Build a grade-adjusted pacing plan from a GPX course"
+    )
+    pacing_parser.add_argument("--course", required=True, help="GPX course file")
+    pacing_parser.add_argument(
+        "--output", required=True, help="Output directory for the pacing plan CSV and Markdown"
+    )
+    pacing_parser.add_argument(
+        "--flat-pace", help="Pace on flat ground as M:SS or minutes per km (e.g. 5:45)"
+    )
+    pacing_parser.add_argument(
+        "--target-time", help="Target total time as H:MM:SS, MM:SS or minutes (e.g. 6:30:00)"
+    )
+    pacing_parser.add_argument(
+        "--segment-km", type=float, default=1.0, help="Segment length in km (default 1.0)"
+    )
+    pacing_parser.add_argument(
+        "--min-descent-factor",
+        type=float,
+        default=DEFAULT_MIN_DESCENT_FACTOR,
+        help="Floor for descent pace as a fraction of flat pace (default 0.85)",
+    )
+    pacing_parser.add_argument("--verbose", action="store_true", help="Enable debug logging")
+    pacing_parser.set_defaults(func=pacing)
     return parser
 
 
