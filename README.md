@@ -10,7 +10,8 @@ This public repository is a safe portfolio version. Examples are synthetic or an
 
 - Parses local COROS-style ZIP, FIT, and TCX activity exports into normalized activity, record, and lap tables.
 - Computes weekly/monthly volume, distance, ascent, trail specificity, long runs, back-to-back blocks, heart-rate zones, estimated load, acute/chronic load ratio, and data-quality flags.
-- Builds grade-adjusted pacing plans from GPX courses (Minetti energy-cost model with documented limits), from either a flat pace or a target finish time.
+- Builds grade-adjusted pacing plans from GPX courses (Minetti energy-cost model with documented limits), from either a flat pace or a target finish time, with optional hiking above a gradient threshold, first-order fatigue drift, and checkpoint tables with clock times.
+- Calibrates a personal grade-speed curve from the athlete's own normalized records (distance-resampled, stop/spike-filtered, gradient-binned, compared to Minetti) and uses it in pacing plans with a literature fallback outside the calibrated range.
 - Generates CSV, Markdown, and chart-oriented report outputs.
 - Builds a Notion training-dashboard structure with local Markdown/CSV dry-runs before any Notion write.
 - Evaluates morning training context and recommends whether to maintain, reduce, rest, replace with an easy session, or swap sessions within the week.
@@ -61,11 +62,12 @@ Synthetic examples live in [examples/synthetic](examples/synthetic).
 | Weekly summary | [summary_weekly.csv](examples/synthetic/summary_weekly.csv) |
 | Morning recommendation | [morning-recommendation.md](examples/synthetic/morning-recommendation.md) |
 | Pacing plan from a GPX course | [pacing-plan.md](examples/synthetic/pacing-plan.md) |
+| Personal grade-speed calibration | [calibration.md](examples/synthetic/calibration.md) |
 | Notion dry-run preview | [notion-dashboard-preview.md](examples/synthetic/notion-dashboard-preview.md) |
 
 ## Tech Stack
 
-- Python, pandas, matplotlib, PyYAML
+- Python, pandas, numpy, matplotlib, PyYAML
 - FIT parsing via `fitparse`, with `fitdecode` fallback
 - TCX parsing via Python XML tooling
 - TypeScript, Node.js, Vitest

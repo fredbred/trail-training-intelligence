@@ -1,6 +1,6 @@
 # Architecture
 
-Trail Training Intelligence is a local-first workspace with four related systems. Each system can be understood and tested without publishing private account data.
+Trail Training Intelligence is a local-first workspace with five related systems. Each system can be understood and tested without publishing private account data.
 
 ```mermaid
 flowchart TD
@@ -21,6 +21,9 @@ flowchart TD
   O["GPX course"] --> P["Course parsing and segmentation"]
   P --> Q["Grade-adjusted pacing model"]
   Q --> R["Per-segment pacing plan: CSV, Markdown"]
+
+  C --> S["Personal grade-speed calibration"]
+  S --> Q
 ```
 
 ## Components
@@ -28,7 +31,8 @@ flowchart TD
 | Component | Path | Role | Public-safe surface |
 | --- | --- | --- | --- |
 | Trail Data Pipeline | `src/trail_data_pipeline/` | Parse activity files, normalize tables, compute trail metrics, render reports | Loaders, normalization, metrics, report code, tests |
-| Pacing Planner | `src/trail_data_pipeline/pacing.py` | Parse GPX courses and build grade-adjusted per-segment pacing plans | Parsing, model, segmentation, rendering, CLI, tests |
+| Pacing Planner | `src/trail_data_pipeline/pacing.py` | Parse GPX courses and build grade-adjusted per-segment pacing plans | Parsing, models, segmentation, drift, checkpoints, rendering, CLI, tests |
+| Personal Calibration | `src/trail_data_pipeline/calibration.py` | Fit the athlete's own grade-speed curve from normalized records | Profiling, fitting, JSON round-trip, model, CLI, tests |
 | Notion Training Dashboard | `notion-trail-goal-training/` | Generate a structured training dashboard and local dry-run exports | Schemas, seed data, dry-run exporter, tests |
 | Morning Training Sync | `runalyze-morning-sync/` | Analyze morning context and decide whether to maintain or adapt the day | Recommendation logic, condition analysis, fixture tests |
 
@@ -41,7 +45,8 @@ flowchart TD
 5. Reporting writes CSV and Markdown artifacts to a caller-chosen output directory.
 6. The Notion tool can generate local Markdown/CSV first, then create the dashboard only when credentials and a parent page are supplied.
 7. The morning logic consumes local context snapshots and produces a recommendation with reasons and data-quality flags.
-8. The pacing planner parses a GPX course, splits it into distance segments, weights each segment with a documented grade-adjusted cost model, and renders a per-segment plan from a flat pace or a target time.
+8. The pacing planner parses a GPX course, splits it into distance segments, weights each segment with a documented grade-adjusted cost model (optionally hiking above a gradient threshold), applies optional first-order fatigue drift, and renders a per-segment plan from a flat pace or a target time, with checkpoint clock times.
+9. The calibration tool resamples the athlete's own records on a fixed distance grid, bins speed by gradient, compares the personal curve to Minetti, and exports a model the pacing planner can consume with a literature fallback outside the calibrated range. Calibrations built from real exports stay private.
 
 ## Safety Boundaries
 
