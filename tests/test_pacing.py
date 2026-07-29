@@ -4,6 +4,8 @@ import pytest
 
 from trail_data_pipeline.cli import main
 from trail_data_pipeline.pacing import (
+    MinettiModel,
+    build_checkpoint_table,
     build_pacing_plan,
     build_segments,
     format_hms,
@@ -173,6 +175,99 @@ def test_build_pacing_plan_requires_exactly_one_mode(tmp_path):
         build_pacing_plan(segments)
     with pytest.raises(ValueError):
         build_pacing_plan(segments, flat_pace_min_per_km=6.0, target_time_min=60.0)
+
+
+def test_minetti_model_matches_pace_factor_function():
+    model = MinettiModel()
+
+    for gradient in [-0.2, -0.05, 0.0, 0.08, 0.3]:
+        assert model.factor(gradient) == pytest.approx(pace_factor(gradient))
+
+
+def test_hike_gait_above_threshold_uses_walking_cost():
+    # Minetti 2002 walking cost at +25%: 9.488 J/kg/m, cheaper than running
+    # (10.725); both normalized by the flat running cost 3.6.
+    model = MinettiModel(hike_threshold=0.20)
+
+    assert model.factor(0.25) == pytest.approx(9.488 / 3.6, rel=1e-3)
+    assert model.factor(0.25) < MinettiModel().factor(0.25)
+    assert model.factor(0.15) == pytest.approx(MinettiModel().factor(0.15))
+
+
+def test_build_segments_accepts_custom_model(tmp_path):
+    # ~25% sustained climb: the hiking model must produce a faster plan.
+    course = parse_gpx_course(write_gpx(tmp_path, [1000.0 + 28 * i for i in range(10)]))
+
+    running = build_segments(course, segment_m=2000.0)
+    hiking = build_segments(course, segment_m=2000.0, model=MinettiModel(hike_threshold=0.20))
+
+    assert hiking["pace_factor"].iloc[0] < running["pace_factor"].iloc[0]
+
+
+def test_drift_shapes_pace_and_preserves_target_time(tmp_path):
+    course = parse_gpx_course(write_gpx(tmp_path, [1000.0] * 28))
+    segments = build_segments(course, segment_m=1000.0)
+
+    plan = build_pacing_plan(segments, target_time_min=60.0, drift_pct_per_hour=6.0)
+
+    assert plan.total_time_min == pytest.approx(60.0, rel=1e-6)
+    paces = plan.segments["pace_min_per_km"].tolist()
+    assert paces[-1] > paces[0]
+    assert paces == sorted(paces)
+
+
+def test_drift_increases_total_time_in_flat_pace_mode(tmp_path):
+    course = parse_gpx_course(write_gpx(tmp_path, [1000.0] * 28))
+    segments = build_segments(course, segment_m=1000.0)
+
+    without = build_pacing_plan(segments, flat_pace_min_per_km=6.0)
+    with_drift = build_pacing_plan(segments, flat_pace_min_per_km=6.0, drift_pct_per_hour=6.0)
+
+    assert with_drift.total_time_min > without.total_time_min
+    assert with_drift.segments["pace_min_per_km"].iloc[0] >= 6.0
+
+
+def test_checkpoint_table_interpolates_times_and_clock(tmp_path):
+    course = parse_gpx_course(write_gpx(tmp_path, [1000.0] * 21))
+    plan = build_pacing_plan(build_segments(course), flat_pace_min_per_km=6.0)
+
+    table = build_checkpoint_table(plan, [(1.5, "Ravito 1"), (2.0, "Arrivée")], start_time="8:00")
+
+    assert table["name"].tolist() == ["Ravito 1", "Arrivée"]
+    assert table["cumulative_time_min"].iloc[0] == pytest.approx(9.0, rel=1e-3)
+    assert table["clock"].iloc[0] == "8:09"
+    assert table["split_min"].iloc[1] == pytest.approx(3.0, rel=1e-2)
+
+
+def test_cli_pacing_with_checkpoints_and_start_time(tmp_path):
+    gpx_path = write_gpx(tmp_path, [1000.0 + 8 * i for i in range(31)])
+    output_dir = tmp_path / "out"
+
+    exit_code = main(
+        [
+            "pacing",
+            "--course",
+            str(gpx_path),
+            "--target-time",
+            "0:30:00",
+            "--start-time",
+            "8:30",
+            "--checkpoint",
+            "1.5:Col du test",
+            "--drift-pct-per-hour",
+            "4",
+            "--hike-threshold",
+            "0.20",
+            "--output",
+            str(output_dir),
+        ]
+    )
+
+    assert exit_code == 0
+    content = (output_dir / "pacing_plan.md").read_text(encoding="utf-8")
+    assert "Col du test" in content
+    assert "Passages" in content
+    assert "8:30" in content
 
 
 def test_format_helpers_render_time_and_pace():
