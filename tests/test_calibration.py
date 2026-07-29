@@ -174,9 +174,16 @@ def test_cli_pacing_uses_calibration_model(tmp_path):
     model_path = tmp_path / "calibration.json"
     save_calibration(calibration, model_path)
 
-    from tests.test_pacing import write_gpx
-
-    gpx_path = write_gpx(tmp_path, [1000.0 + 8 * i for i in range(31)])
+    points = "".join(
+        f'<trkpt lat="{45.0 + i * 0.001:.6f}" lon="6.0"><ele>{1000.0 + 8 * i}</ele></trkpt>'
+        for i in range(31)
+    )
+    gpx_path = tmp_path / "course.gpx"
+    gpx_path.write_text(
+        '<gpx version="1.1" xmlns="http://www.topografix.com/GPX/1/1">'
+        f"<trk><name>Course</name><trkseg>{points}</trkseg></trk></gpx>",
+        encoding="utf-8",
+    )
     output_dir = tmp_path / "out"
     exit_code = main(
         [
