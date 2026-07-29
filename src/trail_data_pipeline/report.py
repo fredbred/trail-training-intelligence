@@ -1,7 +1,7 @@
 """Markdown report generation."""
 
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Dict, Iterable, List
 
 import pandas as pd
 
@@ -42,7 +42,7 @@ def _markdown_table(frame: pd.DataFrame) -> str:
     return "\n".join(lines)
 
 
-def _activity_table(frame: pd.DataFrame, columns: List[str], limit: int = 10) -> str:
+def _activity_table(frame: pd.DataFrame, columns: list[str], limit: int = 10) -> str:
     if frame.empty:
         return "_Aucune activite._"
     table = frame.head(limit).copy()
@@ -75,7 +75,9 @@ def _figure(path: str, caption: str) -> str:
     return f"![{caption}]({path})"
 
 
-def _missing_limits(activities: pd.DataFrame, records: pd.DataFrame, skipped: Iterable[SkippedFile], config: Dict) -> List[str]:
+def _missing_limits(
+    activities: pd.DataFrame, records: pd.DataFrame, skipped: Iterable[SkippedFile], config: dict
+) -> list[str]:
     limits = []
     if activities.empty:
         return ["Aucune activite normalisee."]
@@ -93,7 +95,9 @@ def _missing_limits(activities: pd.DataFrame, records: pd.DataFrame, skipped: It
         limits.append("Zones FC non fournies : pas d'interpretation physiologique des intensites.")
     skipped_list = list(skipped)
     if skipped_list:
-        limits.append(f"{len(skipped_list)} fichier(s) ignores ou non parsables, voir `skipped_files.csv`.")
+        limits.append(
+            f"{len(skipped_list)} fichier(s) ignores ou non parsables, voir `skipped_files.csv`."
+        )
     return limits or ["Pas de limite majeure detectee par les controles simples."]
 
 
@@ -103,10 +107,10 @@ def render_report(
     weekly: pd.DataFrame,
     monthly: pd.DataFrame,
     records: pd.DataFrame,
-    analysis: Dict,
-    plots: Dict[str, str],
+    analysis: dict,
+    plots: dict[str, str],
     skipped: Iterable[SkippedFile],
-    config: Dict,
+    config: dict,
 ) -> Path:
     """Write the Markdown report."""
 
@@ -119,9 +123,15 @@ def render_report(
         longest = None
         peak_week = None
     else:
-        period = f"{_date(activities['start_time'].min())} au {_date(activities['start_time'].max())}"
+        period = (
+            f"{_date(activities['start_time'].min())} au {_date(activities['start_time'].max())}"
+        )
         longest = activities.sort_values("duration_hours", ascending=False).iloc[0]
-        peak_week = weekly.sort_values("total_duration_hours", ascending=False).iloc[0] if not weekly.empty else None
+        peak_week = (
+            weekly.sort_values("total_duration_hours", ascending=False).iloc[0]
+            if not weekly.empty
+            else None
+        )
 
     total_hours = activities["duration_hours"].sum(skipna=True) if not activities.empty else 0
     total_distance = activities["distance_km"].sum(skipna=True) if not activities.empty else 0
@@ -137,8 +147,12 @@ def render_report(
         f"- Volume moyen hebdomadaire : {_fmt(avg_weekly, 1, ' h')}.",
         f"- Distance totale : {_fmt(total_distance, 1, ' km')}.",
         f"- D+ total : {_fmt(total_ascent, 0, ' m')}.",
-        f"- Plus longue sortie : {_fmt(longest['duration_hours'], 1, ' h')} le {_date(longest['start_time'])}." if longest is not None else "- Plus longue sortie : n/a.",
-        f"- Semaine la plus chargée : semaine du {_date(peak_week['week_start'])}, {_fmt(peak_week['total_duration_hours'], 1, ' h')}." if peak_week is not None else "- Semaine la plus chargée : n/a.",
+        f"- Plus longue sortie : {_fmt(longest['duration_hours'], 1, ' h')} le {_date(longest['start_time'])}."
+        if longest is not None
+        else "- Plus longue sortie : n/a.",
+        f"- Semaine la plus chargée : semaine du {_date(peak_week['week_start'])}, {_fmt(peak_week['total_duration_hours'], 1, ' h')}."
+        if peak_week is not None
+        else "- Semaine la plus chargée : n/a.",
     ]
     trends = analysis.get("trends", pd.DataFrame())
     if not trends.empty:
@@ -164,7 +178,7 @@ def render_report(
         f"- D+ moyen par km : {_fmt(activities['dplus_per_km'].mean(skipna=True) if 'dplus_per_km' in activities else None, 0, ' m/km')}.",
         f"- D- total : {_fmt(activities['descent_m'].sum(skipna=True) if 'descent_m' in activities else None, 0, ' m')}.",
         f"- Temps estimé en montée : {_fmt(activities['estimated_uphill_hours'].sum(skipna=True) if 'estimated_uphill_hours' in activities else None, 1, ' h')}.",
-        f"- Temps outdoor / indoor : {_fmt(activities.loc[activities['is_outdoor'] == True, 'duration_hours'].sum(skipna=True) if 'is_outdoor' in activities else None, 1, ' h')} / {_fmt(activities.loc[activities['is_outdoor'] == False, 'duration_hours'].sum(skipna=True) if 'is_outdoor' in activities else None, 1, ' h')}.",
+        f"- Temps outdoor / indoor : {_fmt(activities.loc[activities['is_outdoor'], 'duration_hours'].sum(skipna=True) if 'is_outdoor' in activities else None, 1, ' h')} / {_fmt(activities.loc[not activities['is_outdoor'], 'duration_hours'].sum(skipna=True) if 'is_outdoor' in activities else None, 1, ' h')}.",
         f"- Sorties avec D+ significatif : {int(activities['has_significant_ascent'].sum()) if 'has_significant_ascent' in activities else 0}.",
         f"- Blocs back-to-back détectés : {len(analysis.get('back_to_back', pd.DataFrame()))}.",
         "",
@@ -178,14 +192,18 @@ def render_report(
     ]
     zones = analysis.get("heart_rate_zones", pd.DataFrame())
     if zones.empty:
-        lines.append("Zones FC non fournies ou données FC insuffisantes : synthèse descriptive uniquement.")
+        lines.append(
+            "Zones FC non fournies ou données FC insuffisantes : synthèse descriptive uniquement."
+        )
     else:
         zones_table = zones.copy()
         for column in ["seconds", "minutes"]:
             if column in zones_table:
                 zones_table[column] = zones_table[column].apply(lambda value: _fmt(value, 1))
         if "share" in zones_table:
-            zones_table["share"] = zones_table["share"].apply(lambda value: _fmt(value * 100, 0, " %"))
+            zones_table["share"] = zones_table["share"].apply(
+                lambda value: _fmt(value * 100, 0, " %")
+            )
         lines.append(_markdown_table(zones_table))
     lines.append("")
 
@@ -195,7 +213,15 @@ def render_report(
         "",
         _activity_table(
             analysis.get("top_long", pd.DataFrame()),
-            ["start_time", "sport", "duration_hours", "distance_km", "ascent_m", "descent_m", "dplus_per_hour"],
+            [
+                "start_time",
+                "sport",
+                "duration_hours",
+                "distance_km",
+                "ascent_m",
+                "descent_m",
+                "dplus_per_hour",
+            ],
         ),
         "",
         "## Charge estimée",
@@ -245,7 +271,15 @@ def render_report(
         "## Top 10 D+",
         _activity_table(
             analysis.get("top_ascent", pd.DataFrame()),
-            ["start_time", "sport", "duration_hours", "distance_km", "ascent_m", "descent_m", "dplus_per_hour"],
+            [
+                "start_time",
+                "sport",
+                "duration_hours",
+                "distance_km",
+                "ascent_m",
+                "descent_m",
+                "dplus_per_hour",
+            ],
         ),
         "",
     ]

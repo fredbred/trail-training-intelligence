@@ -5,9 +5,9 @@ import shutil
 import tempfile
 import zipfile
 from pathlib import Path, PurePosixPath
-from typing import List, Tuple
+from typing import Optional
 
-from .base import LoaderError, LoadedActivity, SkippedFile, SUPPORTED_EXTENSIONS
+from .base import SUPPORTED_EXTENSIONS, LoadedActivity, LoaderError, SkippedFile
 from .fit_loader import load_fit_file
 from .tcx_loader import load_tcx_file
 
@@ -19,7 +19,7 @@ def _is_safe_zip_name(name: str) -> bool:
     return not path.is_absolute() and ".." not in path.parts
 
 
-def discover_activity_files(zip_path: Path) -> Tuple[List[str], List[SkippedFile]]:
+def discover_activity_files(zip_path: Path) -> tuple[list[str], list[SkippedFile]]:
     """Return supported activity members and ignored files from a ZIP."""
 
     supported = []
@@ -36,11 +36,13 @@ def discover_activity_files(zip_path: Path) -> Tuple[List[str], List[SkippedFile
             if extension in SUPPORTED_EXTENSIONS:
                 supported.append(name)
             else:
-                skipped.append(SkippedFile(path=name, reason=f"unsupported_format:{extension or 'none'}"))
+                skipped.append(
+                    SkippedFile(path=name, reason=f"unsupported_format:{extension or 'none'}")
+                )
     return supported, skipped
 
 
-def load_activity_path(path: Path, source_name: str = None) -> List[LoadedActivity]:
+def load_activity_path(path: Path, source_name: Optional[str] = None) -> list[LoadedActivity]:
     """Dispatch one activity file to the correct loader."""
 
     extension = path.suffix.lower()
@@ -51,14 +53,14 @@ def load_activity_path(path: Path, source_name: str = None) -> List[LoadedActivi
     raise LoaderError(f"Unsupported activity format: {path}")
 
 
-def load_zip_file(zip_path: Path) -> Tuple[List[LoadedActivity], List[SkippedFile]]:
+def load_zip_file(zip_path: Path) -> tuple[list[LoadedActivity], list[SkippedFile]]:
     """Load every supported activity file from a ZIP."""
 
     zip_path = Path(zip_path)
     supported, skipped = discover_activity_files(zip_path)
     logger.info("Detected %s supported activity files in %s", len(supported), zip_path)
 
-    loaded: List[LoadedActivity] = []
+    loaded: list[LoadedActivity] = []
     with tempfile.TemporaryDirectory(prefix="trail-data-pipeline-") as temp_dir:
         temp_root = Path(temp_dir)
         with zipfile.ZipFile(zip_path) as archive:
@@ -74,6 +76,8 @@ def load_zip_file(zip_path: Path) -> Tuple[List[LoadedActivity], List[SkippedFil
                     if exc.__class__.__name__ == "MissingDependencyError":
                         raise
                     logger.warning("Skipping %s: %s", member, exc)
-                    skipped.append(SkippedFile(path=member, reason=f"parse_error:{extension}:{exc}"))
+                    skipped.append(
+                        SkippedFile(path=member, reason=f"parse_error:{extension}:{exc}")
+                    )
 
     return loaded, skipped

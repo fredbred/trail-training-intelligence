@@ -1,10 +1,9 @@
 """Shared loader types."""
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from typing import Any
 
 import pandas as pd
-
 
 SUPPORTED_EXTENSIONS = {".fit", ".tcx"}
 
@@ -21,10 +20,10 @@ class MissingDependencyError(LoaderError):
 class LoadedActivity:
     """A parsed activity before normalization."""
 
-    activity: Dict[str, Any]
+    activity: dict[str, Any]
     records: pd.DataFrame = field(default_factory=pd.DataFrame)
     laps: pd.DataFrame = field(default_factory=pd.DataFrame)
-    warnings: List[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
 
 @dataclass

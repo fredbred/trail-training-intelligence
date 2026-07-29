@@ -1,11 +1,10 @@
 """Training metrics and aggregations."""
 
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 
 import pandas as pd
 import yaml
-
 
 DEFAULT_CONFIG = {
     "heart_rate_zones": None,
@@ -20,7 +19,7 @@ DEFAULT_CONFIG = {
 }
 
 
-def load_config(path: Optional[Path]) -> Dict:
+def load_config(path: Optional[Path]) -> dict:
     """Load optional YAML config and merge it with defaults."""
 
     config = dict(DEFAULT_CONFIG)
@@ -45,7 +44,7 @@ def _week_start(series: pd.Series) -> pd.Series:
     return normalized - pd.to_timedelta(normalized.dt.weekday, unit="D")
 
 
-def _hr_reference(activities: pd.DataFrame, config: Dict) -> Optional[float]:
+def _hr_reference(activities: pd.DataFrame, config: dict) -> Optional[float]:
     zones = config.get("heart_rate_zones")
     if zones:
         upper_bounds = []
@@ -63,7 +62,7 @@ def _hr_reference(activities: pd.DataFrame, config: Dict) -> Optional[float]:
     return None
 
 
-def add_activity_metrics(activities: pd.DataFrame, config: Dict) -> pd.DataFrame:
+def add_activity_metrics(activities: pd.DataFrame, config: dict) -> pd.DataFrame:
     """Add trail, load and regularity columns to activities."""
 
     if activities.empty:
@@ -89,7 +88,9 @@ def add_activity_metrics(activities: pd.DataFrame, config: Dict) -> pd.DataFrame
     frame["date"] = frame["start_time"].dt.date
     frame["day_of_week"] = frame["start_time"].dt.dayofweek
     frame["is_weekend"] = frame["day_of_week"].isin([5, 6])
-    frame["dplus_per_hour"] = frame["ascent_m"] / frame["duration_hours"].where(frame["duration_hours"] > 0)
+    frame["dplus_per_hour"] = frame["ascent_m"] / frame["duration_hours"].where(
+        frame["duration_hours"] > 0
+    )
     frame["dplus_per_km"] = frame["ascent_m"] / frame["distance_km"].where(frame["distance_km"] > 0)
     frame["is_long_run"] = frame["duration_minutes"] >= float(config["long_run_min_minutes"])
     frame["is_medium_run"] = frame["duration_minutes"] >= float(config["medium_run_min_minutes"])
@@ -133,10 +134,14 @@ def add_stream_metrics(activities: pd.DataFrame, records: pd.DataFrame) -> pd.Da
         return frame
     stream["timestamp"] = pd.to_datetime(stream["timestamp"], errors="coerce")
     stream["altitude_m"] = pd.to_numeric(stream["altitude_m"], errors="coerce")
-    stream = stream.dropna(subset=["timestamp", "altitude_m"]).sort_values(["activity_id", "timestamp"])
+    stream = stream.dropna(subset=["timestamp", "altitude_m"]).sort_values(
+        ["activity_id", "timestamp"]
+    )
     stream["next_timestamp"] = stream.groupby("activity_id")["timestamp"].shift(-1)
     stream["next_altitude_m"] = stream.groupby("activity_id")["altitude_m"].shift(-1)
-    stream["seconds"] = (stream["next_timestamp"] - stream["timestamp"]).dt.total_seconds().clip(lower=0, upper=120)
+    stream["seconds"] = (
+        (stream["next_timestamp"] - stream["timestamp"]).dt.total_seconds().clip(lower=0, upper=120)
+    )
     stream["altitude_delta_m"] = stream["next_altitude_m"] - stream["altitude_m"]
     stream = stream.dropna(subset=["seconds", "altitude_delta_m"])
     if stream.empty:
@@ -144,19 +149,16 @@ def add_stream_metrics(activities: pd.DataFrame, records: pd.DataFrame) -> pd.Da
 
     stream["uphill_seconds"] = stream["seconds"].where(stream["altitude_delta_m"] > 0.5, 0)
     stream["downhill_seconds"] = stream["seconds"].where(stream["altitude_delta_m"] < -0.5, 0)
-    summary = (
-        stream.groupby("activity_id", as_index=False)
-        .agg(
-            estimated_uphill_seconds=("uphill_seconds", "sum"),
-            estimated_downhill_seconds=("downhill_seconds", "sum"),
-        )
+    summary = stream.groupby("activity_id", as_index=False).agg(
+        estimated_uphill_seconds=("uphill_seconds", "sum"),
+        estimated_downhill_seconds=("downhill_seconds", "sum"),
     )
     frame = frame.drop(columns=new_columns).merge(summary, on="activity_id", how="left")
     frame["estimated_uphill_minutes"] = frame["estimated_uphill_seconds"] / 60
     frame["estimated_uphill_hours"] = frame["estimated_uphill_seconds"] / 3600
-    frame["estimated_uphill_share"] = frame["estimated_uphill_seconds"] / frame["duration_seconds"].where(
-        frame["duration_seconds"] > 0
-    )
+    frame["estimated_uphill_share"] = frame["estimated_uphill_seconds"] / frame[
+        "duration_seconds"
+    ].where(frame["duration_seconds"] > 0)
     return frame
 
 
@@ -197,11 +199,15 @@ def build_daily_summary(activities: pd.DataFrame) -> pd.DataFrame:
     )
 
     all_days = pd.date_range(daily["date"].min(), daily["date"].max(), freq="D")
-    daily = daily.set_index("date").reindex(all_days, fill_value=0).rename_axis("date").reset_index()
+    daily = (
+        daily.set_index("date").reindex(all_days, fill_value=0).rename_axis("date").reset_index()
+    )
     daily["rolling_7d_load"] = daily["estimated_load"].rolling(7, min_periods=1).sum()
     daily["rolling_28d_load"] = daily["estimated_load"].rolling(28, min_periods=1).sum()
     chronic_weekly = daily["rolling_28d_load"] / 4
-    daily["acute_chronic_ratio"] = daily["rolling_7d_load"] / chronic_weekly.where(chronic_weekly > 0)
+    daily["acute_chronic_ratio"] = daily["rolling_7d_load"] / chronic_weekly.where(
+        chronic_weekly > 0
+    )
     return daily[columns]
 
 
@@ -275,10 +281,15 @@ def build_weekly_summary(activities: pd.DataFrame, daily: pd.DataFrame) -> pd.Da
     all_weeks = pd.date_range(weekly["week_start"].min(), weekly["week_start"].max(), freq="W-MON")
     if len(all_weeks) and all_weeks[0] != weekly["week_start"].min():
         all_weeks = all_weeks.insert(0, weekly["week_start"].min())
-    weekly = weekly.set_index("week_start").reindex(all_weeks, fill_value=0).rename_axis("week_start").reset_index()
-    weekly["weekend_share"] = weekly["weekend_duration_hours"] / weekly["total_duration_hours"].where(
-        weekly["total_duration_hours"] > 0
+    weekly = (
+        weekly.set_index("week_start")
+        .reindex(all_weeks, fill_value=0)
+        .rename_axis("week_start")
+        .reset_index()
     )
+    weekly["weekend_share"] = weekly["weekend_duration_hours"] / weekly[
+        "total_duration_hours"
+    ].where(weekly["total_duration_hours"] > 0)
     weekly["dplus_per_hour"] = weekly["total_ascent_m"] / weekly["total_duration_hours"].where(
         weekly["total_duration_hours"] > 0
     )
@@ -296,7 +307,9 @@ def build_weekly_summary(activities: pd.DataFrame, daily: pd.DataFrame) -> pd.Da
         )
         monotony["monotony"] = monotony["mean"] / monotony["std"].where(monotony["std"] > 0)
         monotony["strain"] = monotony["week_load"] * monotony["monotony"]
-        weekly = weekly.merge(monotony[["monotony", "strain"]], left_on="week_start", right_index=True, how="left")
+        weekly = weekly.merge(
+            monotony[["monotony", "strain"]], left_on="week_start", right_index=True, how="left"
+        )
 
         rolling = (
             daily_for_week.sort_values("date")
@@ -357,7 +370,7 @@ def build_monthly_summary(activities: pd.DataFrame) -> pd.DataFrame:
     return monthly[columns]
 
 
-def heart_rate_zone_distribution(records: pd.DataFrame, config: Dict) -> pd.DataFrame:
+def heart_rate_zone_distribution(records: pd.DataFrame, config: dict) -> pd.DataFrame:
     """Estimate time in configured heart-rate zones from record streams."""
 
     zones = config.get("heart_rate_zones")
@@ -370,7 +383,9 @@ def heart_rate_zone_distribution(records: pd.DataFrame, config: Dict) -> pd.Data
         return pd.DataFrame(columns=columns)
     frame["timestamp"] = pd.to_datetime(frame["timestamp"], errors="coerce")
     frame["heart_rate_bpm"] = pd.to_numeric(frame["heart_rate_bpm"], errors="coerce")
-    frame = frame.dropna(subset=["timestamp", "heart_rate_bpm"]).sort_values(["activity_id", "timestamp"])
+    frame = frame.dropna(subset=["timestamp", "heart_rate_bpm"]).sort_values(
+        ["activity_id", "timestamp"]
+    )
     frame["next_timestamp"] = frame.groupby("activity_id")["timestamp"].shift(-1)
     frame["seconds"] = (frame["next_timestamp"] - frame["timestamp"]).dt.total_seconds()
     frame["seconds"] = frame["seconds"].clip(lower=0, upper=120).fillna(0)
@@ -392,7 +407,7 @@ def heart_rate_zone_distribution(records: pd.DataFrame, config: Dict) -> pd.Data
     return summary[columns].sort_values("zone")
 
 
-def detect_back_to_back(activities: pd.DataFrame, config: Dict) -> pd.DataFrame:
+def detect_back_to_back(activities: pd.DataFrame, config: dict) -> pd.DataFrame:
     """Detect consecutive-day medium or long efforts."""
 
     columns = [
@@ -431,9 +446,13 @@ def detect_back_to_back(activities: pd.DataFrame, config: Dict) -> pd.DataFrame:
                     "start_date": previous["date"],
                     "end_date": row["date"],
                     "activity_count": int(previous["activity_count"] + row["activity_count"]),
-                    "total_duration_hours": float(previous["total_duration_hours"] + row["total_duration_hours"]),
+                    "total_duration_hours": float(
+                        previous["total_duration_hours"] + row["total_duration_hours"]
+                    ),
                     "total_ascent_m": float(previous["total_ascent_m"] + row["total_ascent_m"]),
-                    "contains_long_run": bool(previous["contains_long_run"] or row["contains_long_run"]),
+                    "contains_long_run": bool(
+                        previous["contains_long_run"] or row["contains_long_run"]
+                    ),
                 }
             )
         previous = row
@@ -455,7 +474,9 @@ def _trend_text(weekly: pd.DataFrame, column: str, label: str) -> str:
     return f"{label}: {direction} ({change:+.0%} entre premiere et seconde moitie)."
 
 
-def build_alerts(activities: pd.DataFrame, weekly: pd.DataFrame, zones: pd.DataFrame, config: Dict) -> Dict[str, list]:
+def build_alerts(
+    activities: pd.DataFrame, weekly: pd.DataFrame, zones: pd.DataFrame, config: dict
+) -> dict[str, list]:
     """Build training attention points without medical conclusions."""
 
     alerts = []
@@ -491,14 +512,18 @@ def build_alerts(activities: pd.DataFrame, weekly: pd.DataFrame, zones: pd.DataF
     if pd.notna(weekend_share) and weekend_share > float(config["weekend_imbalance_share"]):
         alerts.append("Volume tres concentre le week-end par rapport aux jours de semaine.")
 
-    high_monotony = active_weeks[pd.to_numeric(active_weeks["monotony"], errors="coerce") > float(config["monotony_alert"])]
+    high_monotony = active_weeks[
+        pd.to_numeric(active_weeks["monotony"], errors="coerce") > float(config["monotony_alert"])
+    ]
     if not high_monotony.empty:
         alerts.append(f"{len(high_monotony)} semaine(s) avec monotonie de charge elevee.")
 
     rolling_median = active_weeks["estimated_load"].rolling(4, min_periods=2).median()
     isolated_peaks = active_weeks[active_weeks["estimated_load"] > rolling_median * 1.8]
     if not isolated_peaks.empty:
-        alerts.append(f"{len(isolated_peaks)} pic(s) isole(s) de charge potentiellement a discuter.")
+        alerts.append(
+            f"{len(isolated_peaks)} pic(s) isole(s) de charge potentiellement a discuter."
+        )
 
     if not zones.empty:
         high = zones[zones["zone"].isin(["z4", "z5"])]["share"].sum()
@@ -510,7 +535,9 @@ def build_alerts(activities: pd.DataFrame, weekly: pd.DataFrame, zones: pd.DataF
     return {"alerts": alerts, "notes": notes}
 
 
-def compute_analysis(activities: pd.DataFrame, records: pd.DataFrame, config: Dict) -> Dict[str, pd.DataFrame]:
+def compute_analysis(
+    activities: pd.DataFrame, records: pd.DataFrame, config: dict
+) -> dict[str, pd.DataFrame]:
     """Compute all analysis tables."""
 
     enriched = add_activity_metrics(activities, config)
@@ -522,8 +549,16 @@ def compute_analysis(activities: pd.DataFrame, records: pd.DataFrame, config: Di
     back_to_back = detect_back_to_back(enriched, config)
     alerts = build_alerts(enriched, weekly, zones, config)
 
-    top_long = enriched.sort_values("duration_minutes", ascending=False).head(10) if not enriched.empty else pd.DataFrame()
-    top_ascent = enriched.sort_values("ascent_m", ascending=False).head(10) if not enriched.empty else pd.DataFrame()
+    top_long = (
+        enriched.sort_values("duration_minutes", ascending=False).head(10)
+        if not enriched.empty
+        else pd.DataFrame()
+    )
+    top_ascent = (
+        enriched.sort_values("ascent_m", ascending=False).head(10)
+        if not enriched.empty
+        else pd.DataFrame()
+    )
     trends = pd.DataFrame(
         [
             {"metric": "volume", "summary": _trend_text(weekly, "total_duration_hours", "Volume")},

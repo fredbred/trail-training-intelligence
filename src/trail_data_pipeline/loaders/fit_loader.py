@@ -1,9 +1,10 @@
 """FIT activity loader."""
 
 import warnings as warnings_module
+from collections.abc import Iterable
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Optional
 
 import pandas as pd
 
@@ -32,7 +33,7 @@ def _load_fitdecode_module():
     return fitdecode
 
 
-def _message_values(message: Any) -> Dict[str, Any]:
+def _message_values(message: Any) -> dict[str, Any]:
     try:
         return dict(message.get_values())
     except Exception:
@@ -42,7 +43,7 @@ def _message_values(message: Any) -> Dict[str, Any]:
         return values
 
 
-def _first(values: Dict[str, Any], names: Iterable[str]) -> Any:
+def _first(values: dict[str, Any], names: Iterable[str]) -> Any:
     for name in names:
         value = values.get(name)
         if value is not None and value != "":
@@ -78,7 +79,7 @@ def _sport_value(value: Any) -> Optional[str]:
     return str(value).strip().lower().replace(" ", "_")
 
 
-def _sport_name(session: Dict[str, Any]) -> str:
+def _sport_name(session: dict[str, Any]) -> str:
     sport = _sport_value(session.get("sport"))
     sub_sport = _sport_value(session.get("sub_sport"))
     if sport and sub_sport and sub_sport not in {"generic", "none"}:
@@ -88,16 +89,16 @@ def _sport_name(session: Dict[str, Any]) -> str:
     return "unknown"
 
 
-def _fitdecode_message_values(message: Any) -> Dict[str, Any]:
+def _fitdecode_message_values(message: Any) -> dict[str, Any]:
     return {field.name: field.value for field in getattr(message, "fields", [])}
 
 
 def _build_loaded_activity(
-    sessions: List[Dict[str, Any]],
-    records: List[Dict[str, Any]],
-    laps: List[Dict[str, Any]],
+    sessions: list[dict[str, Any]],
+    records: list[dict[str, Any]],
+    laps: list[dict[str, Any]],
     source: str,
-    parser_warnings: Optional[List[str]] = None,
+    parser_warnings: Optional[list[str]] = None,
 ) -> LoadedActivity:
     activity_id = Path(source).stem
     session = sessions[-1] if sessions else {}
@@ -156,7 +157,9 @@ def _build_loaded_activity(
     return LoadedActivity(activity=activity, records=records_df, laps=laps_df, warnings=warnings)
 
 
-def _records_from_messages(messages: List[Dict[str, Any]], activity_id: str, source_name: str) -> pd.DataFrame:
+def _records_from_messages(
+    messages: list[dict[str, Any]], activity_id: str, source_name: str
+) -> pd.DataFrame:
     rows = []
     for values in messages:
         rows.append(
@@ -178,7 +181,9 @@ def _records_from_messages(messages: List[Dict[str, Any]], activity_id: str, sou
     return pd.DataFrame(rows)
 
 
-def _laps_from_messages(messages: List[Dict[str, Any]], activity_id: str, source_name: str) -> pd.DataFrame:
+def _laps_from_messages(
+    messages: list[dict[str, Any]], activity_id: str, source_name: str
+) -> pd.DataFrame:
     rows = []
     for index, values in enumerate(messages, start=1):
         rows.append(
@@ -186,7 +191,9 @@ def _laps_from_messages(messages: List[Dict[str, Any]], activity_id: str, source
                 "activity_id": activity_id,
                 "lap_index": index,
                 "start_time": values.get("start_time"),
-                "duration_seconds": _seconds(_first(values, ["total_timer_time", "total_elapsed_time"])),
+                "duration_seconds": _seconds(
+                    _first(values, ["total_timer_time", "total_elapsed_time"])
+                ),
                 "distance_m": _number(values.get("total_distance")),
                 "ascent_m": _number(values.get("total_ascent")),
                 "descent_m": _number(values.get("total_descent")),
@@ -213,7 +220,9 @@ def _load_fitparse_file(path: Path, source: str) -> LoadedActivity:
     return _build_loaded_activity(sessions, records, laps, source)
 
 
-def _load_fitdecode_file(path: Path, source: str, previous_error: str = None) -> LoadedActivity:
+def _load_fitdecode_file(
+    path: Path, source: str, previous_error: Optional[str] = None
+) -> LoadedActivity:
     fitdecode = _load_fitdecode_module()
     messages = {"session": [], "record": [], "lap": []}
     parser_warnings = []
@@ -253,4 +262,6 @@ def load_fit_file(path: Path, source_name: Optional[str] = None) -> LoadedActivi
     except MissingDependencyError:
         raise
     except Exception as exc:
-        raise LoaderError(f"FIT parse failed with fitparse ({fitparse_error}) and fitdecode ({exc})") from exc
+        raise LoaderError(
+            f"FIT parse failed with fitparse ({fitparse_error}) and fitdecode ({exc})"
+        ) from exc

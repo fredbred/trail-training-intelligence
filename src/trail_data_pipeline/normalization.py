@@ -1,11 +1,10 @@
 """Normalize loaded activities into stable tables."""
 
-from typing import Iterable, List, Tuple
+from collections.abc import Iterable
 
 import pandas as pd
 
 from .loaders.base import LoadedActivity
-
 
 ACTIVITY_COLUMNS = [
     "activity_id",
@@ -77,7 +76,7 @@ LAP_COLUMNS = [
 ]
 
 
-def _ensure_columns(frame: pd.DataFrame, columns: List[str]) -> pd.DataFrame:
+def _ensure_columns(frame: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
     frame = frame.copy()
     for column in columns:
         if column not in frame.columns:
@@ -107,7 +106,7 @@ def _numeric(frame: pd.DataFrame, columns: Iterable[str]) -> pd.DataFrame:
     return frame
 
 
-def _derive_ascent_descent(records: pd.DataFrame) -> Tuple[float, float]:
+def _derive_ascent_descent(records: pd.DataFrame) -> tuple[float, float]:
     if records.empty or "altitude_m" not in records:
         return pd.NA, pd.NA
     altitude = pd.to_numeric(records["altitude_m"], errors="coerce").dropna()
@@ -255,11 +254,19 @@ def _normalize_activity(activity: dict, records: pd.DataFrame) -> dict:
     if pd.isna(row["avg_speed_m_s"]) and row.get("distance_m") and row.get("duration_seconds"):
         row["avg_speed_m_s"] = row["distance_m"] / row["duration_seconds"]
 
-    row["duration_minutes"] = row["duration_seconds"] / 60 if pd.notna(row["duration_seconds"]) else pd.NA
-    row["duration_hours"] = row["duration_seconds"] / 3600 if pd.notna(row["duration_seconds"]) else pd.NA
+    row["duration_minutes"] = (
+        row["duration_seconds"] / 60 if pd.notna(row["duration_seconds"]) else pd.NA
+    )
+    row["duration_hours"] = (
+        row["duration_seconds"] / 3600 if pd.notna(row["duration_seconds"]) else pd.NA
+    )
     row["distance_km"] = row["distance_m"] / 1000 if pd.notna(row["distance_m"]) else pd.NA
     row["avg_speed_kmh"] = row["avg_speed_m_s"] * 3.6 if pd.notna(row["avg_speed_m_s"]) else pd.NA
-    if pd.notna(row["duration_minutes"]) and pd.notna(row["distance_km"]) and row["distance_km"] > 0:
+    if (
+        pd.notna(row["duration_minutes"])
+        and pd.notna(row["distance_km"])
+        and row["distance_km"] > 0
+    ):
         row["avg_pace_min_per_km"] = row["duration_minutes"] / row["distance_km"]
     else:
         row["avg_pace_min_per_km"] = pd.NA
@@ -268,7 +275,16 @@ def _normalize_activity(activity: dict, records: pd.DataFrame) -> dict:
         not records.empty and records[["latitude", "longitude"]].dropna(how="any").shape[0] > 0
     )
     row["gps_available"] = bool(row.get("gps_available")) or has_gps_stream
-    indoor_tokens = ["indoor", "treadmill", "trainer", "virtual", "strength", "training", "gym", "pool"]
+    indoor_tokens = [
+        "indoor",
+        "treadmill",
+        "trainer",
+        "virtual",
+        "strength",
+        "training",
+        "gym",
+        "pool",
+    ]
     outdoor_tokens = ["run", "running", "trail", "hiking", "walk", "ride", "cycling", "bike"]
     sport_name = row["sport"].lower()
     row["is_outdoor"] = bool(row["gps_available"]) or (
@@ -284,7 +300,7 @@ def _normalize_activity(activity: dict, records: pd.DataFrame) -> dict:
     return {column: row[column] for column in ACTIVITY_COLUMNS}
 
 
-def normalize_loaded_activities(activities: List[LoadedActivity]):
+def normalize_loaded_activities(activities: list[LoadedActivity]):
     """Normalize loaded activities into activities, records and laps tables."""
 
     activity_rows = []
@@ -292,7 +308,9 @@ def normalize_loaded_activities(activities: List[LoadedActivity]):
     lap_frames = []
 
     for loaded in activities:
-        activity_id = str(loaded.activity.get("activity_id") or loaded.activity.get("source_file") or "unknown")
+        activity_id = str(
+            loaded.activity.get("activity_id") or loaded.activity.get("source_file") or "unknown"
+        )
         records = _normalize_records(loaded.records, activity_id)
         laps = _normalize_laps(loaded.laps, activity_id)
         activity_rows.append(_normalize_activity(loaded.activity, records))
@@ -302,6 +320,14 @@ def normalize_loaded_activities(activities: List[LoadedActivity]):
             lap_frames.append(laps)
 
     activities_df = pd.DataFrame(activity_rows, columns=ACTIVITY_COLUMNS)
-    records_df = pd.concat(record_frames, ignore_index=True) if record_frames else pd.DataFrame(columns=RECORD_COLUMNS)
-    laps_df = pd.concat(lap_frames, ignore_index=True) if lap_frames else pd.DataFrame(columns=LAP_COLUMNS)
+    records_df = (
+        pd.concat(record_frames, ignore_index=True)
+        if record_frames
+        else pd.DataFrame(columns=RECORD_COLUMNS)
+    )
+    laps_df = (
+        pd.concat(lap_frames, ignore_index=True)
+        if lap_frames
+        else pd.DataFrame(columns=LAP_COLUMNS)
+    )
     return activities_df, records_df, laps_df

@@ -15,9 +15,24 @@ def test_normalize_activity_derives_missing_fields_from_records():
         },
         records=pd.DataFrame(
             [
-                {"timestamp": "2026-01-01T10:00:00Z", "distance_m": 0, "altitude_m": 100, "heart_rate_bpm": 120},
-                {"timestamp": "2026-01-01T10:05:00Z", "distance_m": 800, "altitude_m": 140, "heart_rate_bpm": 130},
-                {"timestamp": "2026-01-01T10:10:00Z", "distance_m": 1500, "altitude_m": 130, "heart_rate_bpm": 128},
+                {
+                    "timestamp": "2026-01-01T10:00:00Z",
+                    "distance_m": 0,
+                    "altitude_m": 100,
+                    "heart_rate_bpm": 120,
+                },
+                {
+                    "timestamp": "2026-01-01T10:05:00Z",
+                    "distance_m": 800,
+                    "altitude_m": 140,
+                    "heart_rate_bpm": 130,
+                },
+                {
+                    "timestamp": "2026-01-01T10:10:00Z",
+                    "distance_m": 1500,
+                    "altitude_m": 130,
+                    "heart_rate_bpm": 128,
+                },
             ]
         ),
     )

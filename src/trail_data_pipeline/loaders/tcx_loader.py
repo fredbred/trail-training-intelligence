@@ -1,7 +1,7 @@
 """TCX activity loader."""
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from xml.etree import ElementTree as ET
 
 import pandas as pd
@@ -25,7 +25,9 @@ def _number(value: Any) -> Optional[float]:
         return None
 
 
-def _trackpoint_rows(trackpoints: List[ET.Element], activity_id: str, source_name: str) -> pd.DataFrame:
+def _trackpoint_rows(
+    trackpoints: list[ET.Element], activity_id: str, source_name: str
+) -> pd.DataFrame:
     rows = []
     for point in trackpoints:
         rows.append(
@@ -47,7 +49,7 @@ def _trackpoint_rows(trackpoints: List[ET.Element], activity_id: str, source_nam
     return pd.DataFrame(rows)
 
 
-def _lap_rows(laps: List[ET.Element], activity_id: str, source_name: str) -> pd.DataFrame:
+def _lap_rows(laps: list[ET.Element], activity_id: str, source_name: str) -> pd.DataFrame:
     rows = []
     for index, lap in enumerate(laps, start=1):
         rows.append(
@@ -72,7 +74,7 @@ def _lap_rows(laps: List[ET.Element], activity_id: str, source_name: str) -> pd.
     return pd.DataFrame(rows)
 
 
-def _ascent_descent(records: pd.DataFrame) -> Dict[str, Optional[float]]:
+def _ascent_descent(records: pd.DataFrame) -> dict[str, Optional[float]]:
     if records.empty or "altitude_m" not in records:
         return {"ascent_m": None, "descent_m": None}
     altitude = pd.to_numeric(records["altitude_m"], errors="coerce").dropna()
@@ -85,7 +87,7 @@ def _ascent_descent(records: pd.DataFrame) -> Dict[str, Optional[float]]:
     }
 
 
-def load_tcx_file(path: Path, source_name: Optional[str] = None) -> List[LoadedActivity]:
+def load_tcx_file(path: Path, source_name: Optional[str] = None) -> list[LoadedActivity]:
     """Parse one TCX file and return every activity found."""
 
     source = source_name or str(path)
@@ -97,7 +99,9 @@ def load_tcx_file(path: Path, source_name: Optional[str] = None) -> List[LoadedA
     loaded = []
     for index, activity_node in enumerate(activity_nodes, start=1):
         base_id = _text(activity_node, "{*}Id") or Path(source).stem
-        activity_id = Path(source).stem if len(activity_nodes) == 1 else f"{Path(source).stem}_{index}"
+        activity_id = (
+            Path(source).stem if len(activity_nodes) == 1 else f"{Path(source).stem}_{index}"
+        )
         sport = (activity_node.attrib.get("Sport") or "unknown").lower()
         lap_nodes = activity_node.findall("{*}Lap")
         trackpoints = activity_node.findall(".//{*}Trackpoint")
@@ -114,8 +118,16 @@ def load_tcx_file(path: Path, source_name: Optional[str] = None) -> List[LoadedA
         if pd.isna(distance) and not records_df.empty:
             distance = records_df["distance_m"].max(skipna=True)
 
-        altitude = pd.to_numeric(records_df.get("altitude_m"), errors="coerce") if not records_df.empty else pd.Series(dtype=float)
-        heart_rate = pd.to_numeric(records_df.get("heart_rate_bpm"), errors="coerce") if not records_df.empty else pd.Series(dtype=float)
+        altitude = (
+            pd.to_numeric(records_df.get("altitude_m"), errors="coerce")
+            if not records_df.empty
+            else pd.Series(dtype=float)
+        )
+        heart_rate = (
+            pd.to_numeric(records_df.get("heart_rate_bpm"), errors="coerce")
+            if not records_df.empty
+            else pd.Series(dtype=float)
+        )
         ascent = _ascent_descent(records_df)
 
         warnings = []
@@ -138,8 +150,12 @@ def load_tcx_file(path: Path, source_name: Optional[str] = None) -> List[LoadedA
                     "max_altitude_m": altitude.max(skipna=True) if not altitude.empty else None,
                     "avg_speed_m_s": (distance / duration) if distance and duration else None,
                     "max_speed_m_s": None,
-                    "avg_heart_rate_bpm": heart_rate.mean(skipna=True) if not heart_rate.empty else None,
-                    "max_heart_rate_bpm": heart_rate.max(skipna=True) if not heart_rate.empty else None,
+                    "avg_heart_rate_bpm": heart_rate.mean(skipna=True)
+                    if not heart_rate.empty
+                    else None,
+                    "max_heart_rate_bpm": heart_rate.max(skipna=True)
+                    if not heart_rate.empty
+                    else None,
                     "avg_cadence": None,
                     "avg_power_w": None,
                     "normalized_power_w": None,
